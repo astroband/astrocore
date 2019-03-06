@@ -1,13 +1,13 @@
-use sha2::{Digest};
-use rand::{Rng};
+use rand::Rng;
+use sha2::Digest;
 
-use std::time::{SystemTime, UNIX_EPOCH};
 use byteorder::{BigEndian, WriteBytesExt};
 use std::io::Write;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::crypto;
+use crate::node_info::NodeInfo;
 use crate::xdr;
-use crate::node_info::{NodeInfo};
 
 pub struct Peer<'a> {
     /// Information about our node
@@ -20,7 +20,7 @@ pub struct Peer<'a> {
     cached_auth_cert: xdr::AuthCert,
     // Authentication system keys. Our ECDH secret and public keys are randomized on startup
     // More info in: stellar-core/src/overlay/PeerAuth.h file
-    /// Private authentication system key 
+    /// Private authentication system key
     auth_secret_key: crypto::Curve25519Secret,
     /// Public authentication system key
     auth_public_key: crypto::Curve25519Public,
@@ -43,13 +43,13 @@ impl<'a> Peer<'a> {
     pub fn new(node_info: &'a NodeInfo, stream: std::net::TcpStream, address: String) -> Peer<'a> {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
-    
+
         let auth_secret_key = crypto::Curve25519Secret::random();
         let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
 
         let mut public_key: [u8; 32i64 as usize] = Default::default();
         public_key.copy_from_slice(node_info.key_pair.public_key().buf());
-        let peer_id = xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256{0: public_key});
+        let peer_id = xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256 { 0: public_key });
 
         let auth_cert = Peer::get_auth_cert(&node_info, &auth_public_key);
         let cloned_auth_cert = auth_cert.clone();
@@ -63,10 +63,10 @@ impl<'a> Peer<'a> {
             listeningPort: 11625,
             peerID: peer_id,
             cert: auth_cert,
-            nonce: xdr::uint256{0: nonce},
+            nonce: xdr::uint256 { 0: nonce },
         };
 
-        Peer{
+        Peer {
             node_info: &node_info,
             stream: stream,
             send_message_sequence: 0 as xdr::uint64,
@@ -106,8 +106,14 @@ impl<'a> Peer<'a> {
     }
 
     /// Make expired certicate for all connection with peers
-    fn get_auth_cert(node_info: &NodeInfo, auth_public_key: &crypto::Curve25519Public) -> xdr::AuthCert {
-        let unix_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    fn get_auth_cert(
+        node_info: &NodeInfo,
+        auth_public_key: &crypto::Curve25519Public,
+    ) -> xdr::AuthCert {
+        let unix_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
 
         let expiration_limit: u64 = 3600; // 1 hour
         let expiration: xdr::uint64 = expiration_limit + unix_time;
@@ -117,27 +123,37 @@ impl<'a> Peer<'a> {
         xdr_codec::pack(&node_info.network_id, &mut buffer).unwrap();
         xdr_codec::pack(&xdr::EnvelopeType::ENVELOPE_TYPE_AUTH, &mut buffer).unwrap();
         xdr_codec::pack(&expiration, &mut buffer).unwrap();
-        xdr_codec::pack(&xdr::Curve25519Public{key: auth_public_key.0}, &mut buffer).unwrap();
+        xdr_codec::pack(
+            &xdr::Curve25519Public {
+                key: auth_public_key.0,
+            },
+            &mut buffer,
+        )
+        .unwrap();
 
         let mut hasher = sha2::Sha256::new();
         hasher.input(buffer);
         let hash = hasher.result();
         let sign = &node_info.key_pair.sign(&hash);
 
-        xdr::AuthCert{
-            pubkey: xdr::Curve25519Public{key: auth_public_key.0},
+        xdr::AuthCert {
+            pubkey: xdr::Curve25519Public {
+                key: auth_public_key.0,
+            },
             expiration: expiration,
-            sig: xdr::Signature{0: sign.to_vec()},
+            sig: xdr::Signature { 0: sign.to_vec() },
         }
     }
 
     pub fn send_hello_message(&mut self) {
         let hello_message = xdr::StellarMessage::HELLO(self.hello.clone());
 
-        let am0 = xdr::AuthenticatedMessageV0{
+        let am0 = xdr::AuthenticatedMessageV0 {
             sequence: 0 as xdr::uint64,
             message: hello_message,
-            mac: xdr::HmacSha256Mac{mac: crypto::HmacSha256Mac::zero().0},
+            mac: xdr::HmacSha256Mac {
+                mac: crypto::HmacSha256Mac::zero().0,
+            },
         };
 
         let mut packed_hello_message = Vec::new();
@@ -154,9 +170,11 @@ impl<'a> Peer<'a> {
         // means another fragment follows.  We don't currently implement
         // continuation fragments, and instead always set the last-record
         // bit to produce a single-fragment record.
-       
+
         let mut header = Vec::new();
-        header.write_u32::<BigEndian>(message_length | 0x80000000).unwrap();
+        header
+            .write_u32::<BigEndian>(message_length | 0x80000000)
+            .unwrap();
         self.stream.write(&header[..]).unwrap();
     }
 }
@@ -164,7 +182,7 @@ impl<'a> Peer<'a> {
 // NOTE: should be implemented by xdrgen
 impl Clone for xdr::AuthCert {
     fn clone(&self) -> xdr::AuthCert {
-        xdr::AuthCert{
+        xdr::AuthCert {
             pubkey: self.pubkey.clone(),
             expiration: self.expiration.clone(),
             sig: self.sig.clone(),

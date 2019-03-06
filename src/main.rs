@@ -1,18 +1,17 @@
 extern crate xdr_codec;
 extern crate xdrgen;
 
-use std::io::{Read};
-use std::net::{TcpStream};
+use std::io::Read;
+use std::net::TcpStream;
 use std::str::from_utf8;
-use std::time::{Duration};
-
+use std::time::Duration;
 
 mod crypto;
 mod network;
 mod peer;
-use peer::{Peer};
+use peer::Peer;
 mod node_info;
-use node_info::{NodeInfo};
+use node_info::NodeInfo;
 
 mod xdr {
     use xdr_codec;
@@ -31,7 +30,7 @@ fn main() {
     let seed = String::from(SECRET_TEST_SEED);
     let node = NodeInfo::new_test(seed);
     let peer_address = String::from("0.0.0.0:3000");
-    
+
     match TcpStream::connect_timeout(&peer_address.parse().unwrap(), Duration::new(3, 0)) {
         Ok(mut stream) => {
             println!("Successfully connected to peer {}", peer_address);

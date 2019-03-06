@@ -8,8 +8,8 @@ mod ecdh;
 mod error;
 mod keypair;
 mod sha;
-mod strkey;
 mod signature;
+mod strkey;
 
 pub use self::ecdh::{Curve25519Public, Curve25519Secret};
 pub use self::keypair::{KeyPair, PublicKey, SecretKey};

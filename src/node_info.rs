@@ -1,6 +1,6 @@
 use crate::crypto;
-use crate::xdr;
 use crate::network;
+use crate::xdr;
 
 pub struct NodeInfo {
     /// Secret seed in our node for build keys
