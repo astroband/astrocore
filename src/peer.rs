@@ -47,7 +47,9 @@ impl<'a, 'b> Peer<'a, 'b> {
         let auth_secret_key = crypto::Curve25519Secret::random();
         let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
 
-        let peer_id = xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(node_info.public_key);
+        let mut public_key: [u8; 32i64 as usize] = Default::default();
+        public_key.copy_from_slice(node_info.key_pair.public_key().buf());
+        let peer_id = xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256{0: public_key});
 
         let auth_cert = Peer::get_auth_cert(&node_info, &auth_public_key);
         let cloned_auth_cert = auth_cert.clone();
@@ -63,10 +65,6 @@ impl<'a, 'b> Peer<'a, 'b> {
             cert: auth_cert,
             nonce: xdr::uint256{0: nonce},
         };
-
-        dbg!("FAIL HERE >>>>");
-        let mut buffer = Vec::new();
-        xdr_codec::pack(&hello, &mut buffer).unwrap();
 
         Peer{
             node_info: &node_info,
@@ -125,12 +123,12 @@ impl<'a, 'b> Peer<'a, 'b> {
         let mut hasher = sha2::Sha256::new();
         hasher.input(buffer);
         let hash = hasher.result();
-        let sign = ed25519::sign(&hash, &node_info.private_key);
+        let sign = &node_info.key_pair.sign(&hash);
 
         xdr::AuthCert{
             pubkey: xdr::Curve25519Public{key: auth_public_key.0},
             expiration: expiration,
-            sig: xdr::Signature{0: sign},
+            sig: xdr::Signature{0: sign.to_vec()},
         }
     }
 
@@ -157,7 +155,7 @@ impl<'a, 'b> Peer<'a, 'b> {
         // bit to produce a single-fragment record.
        
         let mut header = Vec::new();
-        header.write_u32::<BigEndian>(message_length | 0x80000000).unwrap();
+        header.write_u32::<BigEndian>( message_length | 0x80000000).unwrap();
         // self.stream.write(header).unwrap();
     }
 }
