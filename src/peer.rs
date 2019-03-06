@@ -1,19 +1,19 @@
 use sha2::{Digest};
 use rand::{Rng};
-use sodiumoxide::crypto::sign::ed25519;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use byteorder::{BigEndian, WriteBytesExt};
+use std::io::Write;
 
 use crate::crypto;
 use crate::xdr;
 use crate::node_info::{NodeInfo};
 
-pub struct Peer<'a, 'b> {
+pub struct Peer<'a> {
     /// Information about our node
     node_info: &'a NodeInfo,
     /// Socket for write/read with connected peer
-    stream: &'b std::net::TcpStream,
+    stream: std::net::TcpStream,
     /// Current message sequence position.
     send_message_sequence: xdr::uint64,
     /// Signed certificate for a hour
@@ -38,9 +38,9 @@ pub struct Peer<'a, 'b> {
     address: String,
 }
 
-impl<'a, 'b> Peer<'a, 'b> {
+impl<'a> Peer<'a> {
     /// Return peer instance with connection
-    pub fn new(node_info: &'a NodeInfo, stream: &'b std::net::TcpStream, address: String) -> Peer<'a, 'b> {
+    pub fn new(node_info: &'a NodeInfo, stream: std::net::TcpStream, address: String) -> Peer<'a> {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
     
@@ -68,7 +68,7 @@ impl<'a, 'b> Peer<'a, 'b> {
 
         Peer{
             node_info: &node_info,
-            stream: &stream,
+            stream: stream,
             send_message_sequence: 0 as xdr::uint64,
             cached_auth_cert: cloned_auth_cert,
             auth_secret_key: auth_secret_key,
@@ -99,11 +99,10 @@ impl<'a, 'b> Peer<'a, 'b> {
     // If any verify step fails, the peer disconnects immediately.
     /// Start connection process to peer.
     /// More additional info: https://github.com/stellar/stellar-core/blob/ddef8bcacc5193bdd4daa07af404f1b6b1adaf39/src/overlay/OverlayManagerImpl.cpp#L28-L45
-    pub fn start_authentication(&self) -> () {
+    pub fn start_authentication(&mut self) -> () {
         self.send_hello_message();
 
         // implement other stage of process
-        
     }
 
     /// Make expired certicate for all connection with peers
@@ -132,7 +131,7 @@ impl<'a, 'b> Peer<'a, 'b> {
         }
     }
 
-    pub fn send_hello_message(&self) {
+    pub fn send_hello_message(&mut self) {
         let hello_message = xdr::StellarMessage::HELLO(self.hello.clone());
 
         let am0 = xdr::AuthenticatedMessageV0{
@@ -141,13 +140,15 @@ impl<'a, 'b> Peer<'a, 'b> {
             mac: xdr::HmacSha256Mac{mac: crypto::HmacSha256Mac::zero().0},
         };
 
-        let mut buffer = Vec::new();
-        xdr_codec::pack(&am0, &mut buffer).unwrap();
-        self.send_header(buffer.len() as u32);
-        // self.stream.write(buffer).unwrap();
+        let mut packed_hello_message = Vec::new();
+        xdr_codec::pack(&am0, &mut packed_hello_message).unwrap();
+
+        self.send_header(packed_hello_message.len() as u32);
+
+        self.stream.write(&packed_hello_message[..]).unwrap();
     }
 
-    fn send_header(&self, message_length: u32) {
+    fn send_header(&mut self, message_length: u32) {
         // In RPC (see RFC5531 section 11), the high bit means this is the
         // last record fragment in a record.  If the high bit is clear, it
         // means another fragment follows.  We don't currently implement
@@ -155,8 +156,8 @@ impl<'a, 'b> Peer<'a, 'b> {
         // bit to produce a single-fragment record.
        
         let mut header = Vec::new();
-        header.write_u32::<BigEndian>( message_length | 0x80000000).unwrap();
-        // self.stream.write(header).unwrap();
+        header.write_u32::<BigEndian>(message_length | 0x80000000).unwrap();
+        self.stream.write(&header[..]).unwrap();
     }
 }
 

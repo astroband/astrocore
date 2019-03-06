@@ -35,8 +35,9 @@ fn main() {
     match TcpStream::connect_timeout(&peer_address.parse().unwrap(), Duration::new(3, 0)) {
         Ok(mut stream) => {
             println!("Successfully connected to peer {}", peer_address);
+            let cloned_stream = stream.try_clone().expect("clone failed...");
 
-            let peer = Peer::new(&node, &stream, peer_address);
+            let mut peer = Peer::new(&node, cloned_stream, peer_address);
             peer.start_authentication();
 
             let mut data: Vec<u8> = Default::default();
