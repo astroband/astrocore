@@ -6,7 +6,7 @@ pub struct HmacSha256Key(pub [u8; 32]);
 
 impl HmacSha256Key {
     /// Create a key filled with zero.
-    fn zero() -> HmacSha256Key {
+    pub fn zero() -> HmacSha256Key {
         HmacSha256Key([0; 32])
     }
 

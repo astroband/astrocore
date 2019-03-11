@@ -25,4 +25,12 @@ impl Curve25519Public {
         let group_element = curve25519::scalarmult_base(&scalar);
         Curve25519Public(group_element.0)
     }
+
+    pub fn scalarmult(secret_key: &Curve25519Secret, group_element: &[u8; 32]) -> [u8; 32] {
+        let scalar = curve25519::Scalar(secret_key.0);
+        let group_element = curve25519::GroupElement(*group_element);
+        let curve25519::GroupElement(result) =
+            curve25519::scalarmult(&scalar, &group_element).unwrap();
+        result
+    }
 }

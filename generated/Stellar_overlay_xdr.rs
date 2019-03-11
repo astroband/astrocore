@@ -15,8 +15,9 @@ pub struct AuthCert {
     pub sig: Signature,
 }
 
-pub enum AuthenticatedMessage {
-    V0(AuthenticatedMessageV0),
+pub struct AuthenticatedMessage {
+    pub V: uint32,
+    pub V0: AuthenticatedMessageV0,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -120,11 +121,7 @@ impl<Out: xdr_codec::Write> xdr_codec::Pack<Out> for AuthCert {
 
 impl<Out: xdr_codec::Write> xdr_codec::Pack<Out> for AuthenticatedMessage {
     fn pack(&self, out: &mut Out) -> xdr_codec::Result<usize> {
-        Ok(match self {
-            &AuthenticatedMessage::V0(ref val) => {
-                (AuthenticatedMessageType::V0 as i32).pack(out)? + val.pack(out)?
-            }
-        })
+        Ok(self.V.pack(out)? + self.V0.pack(out)? + 0)
     }
 }
 
@@ -288,17 +285,17 @@ impl<In: xdr_codec::Read> xdr_codec::Unpack<In> for AuthenticatedMessage {
     fn unpack(input: &mut In) -> xdr_codec::Result<(AuthenticatedMessage, usize)> {
         let mut sz = 0;
         Ok((
-            match {
-                let (v, dsz): (i32, _) = xdr_codec::Unpack::unpack(input)?;
-                sz += dsz;
-                v
-            } {
-                x if x == (0i32 as i32) => AuthenticatedMessage::V0({
+            AuthenticatedMessage {
+                V: {
                     let (v, fsz) = xdr_codec::Unpack::unpack(input)?;
                     sz += fsz;
                     v
-                }),
-                v => return Err(xdr_codec::Error::invalidcase(v as i32)),
+                },
+                V0: {
+                    let (v, fsz) = xdr_codec::Unpack::unpack(input)?;
+                    sz += fsz;
+                    v
+                },
             },
             sz,
         ))

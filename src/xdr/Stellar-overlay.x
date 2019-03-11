@@ -149,4 +149,9 @@ union AuthenticatedMessage switch (AuthenticatedMessageType type)
 case V0:
     AuthenticatedMessageV0 v0;
 };
+
+struct AuthenticatedMessage { // compability struct
+    uint32 V;
+    AuthenticatedMessageV0 V0;
+};
 //}
