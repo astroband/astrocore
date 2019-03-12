@@ -4,6 +4,7 @@
 //
 // DO NOT EDIT
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AccountMergeResult {
     ACCOUNT_MERGE_SUCCESS(int64),
     default,
@@ -20,6 +21,7 @@ pub enum AccountMergeResultCode {
     ACCOUNT_MERGE_DEST_FULL = -6isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AllowTrustOp {
     pub trustor: AccountID,
     pub authorize: bool,
@@ -41,6 +43,7 @@ pub enum AllowTrustResultCode {
     ALLOW_TRUST_SELF_NOT_ALLOWED = -5isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BumpSequenceOp {
     pub bumpTo: SequenceNumber,
 }
@@ -57,6 +60,7 @@ pub enum BumpSequenceResultCode {
     BUMP_SEQUENCE_BAD_SEQ = -1isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ChangeTrustOp {
     pub line: Asset,
     pub limit: int64,
@@ -78,6 +82,7 @@ pub enum ChangeTrustResultCode {
     CHANGE_TRUST_SELF_NOT_ALLOWED = -5isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ClaimOfferAtom {
     pub sellerID: AccountID,
     pub offerID: uint64,
@@ -87,6 +92,7 @@ pub struct ClaimOfferAtom {
     pub amountBought: int64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateAccountOp {
     pub destination: AccountID,
     pub startingBalance: int64,
@@ -107,6 +113,7 @@ pub enum CreateAccountResultCode {
     CREATE_ACCOUNT_ALREADY_EXIST = -4isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreatePassiveOfferOp {
     pub selling: Asset,
     pub buying: Asset,
@@ -114,16 +121,19 @@ pub struct CreatePassiveOfferOp {
     pub price: Price,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DecoratedSignature {
     pub hint: SignatureHint,
     pub signature: Signature,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InflationPayout {
     pub destination: AccountID,
     pub amount: int64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum InflationResult {
     INFLATION_SUCCESS(Vec<InflationPayout>),
     default,
@@ -135,6 +145,7 @@ pub enum InflationResultCode {
     INFLATION_NOT_TIME = -1isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ManageDataOp {
     pub dataName: string64,
     pub dataValue: Option<Box<DataValue>>,
@@ -162,6 +173,7 @@ pub enum ManageOfferEffect {
     MANAGE_OFFER_DELETED = 2isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ManageOfferOp {
     pub selling: Asset,
     pub buying: Asset,
@@ -170,6 +182,7 @@ pub struct ManageOfferOp {
     pub offerID: uint64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ManageOfferResult {
     MANAGE_OFFER_SUCCESS(ManageOfferSuccessResult),
     default,
@@ -192,10 +205,12 @@ pub enum ManageOfferResultCode {
     MANAGE_OFFER_LOW_RESERVE = -12isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ManageOfferSuccessResult {
     pub offersClaimed: Vec<ClaimOfferAtom>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Memo {
     MEMO_NONE,
     MEMO_TEXT(String),
@@ -213,6 +228,7 @@ pub enum MemoType {
     MEMO_RETURN = 4isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Operation {
     pub sourceAccount: Option<Box<AccountID>>,
 }
@@ -247,6 +263,7 @@ pub enum OperationType {
     BUMP_SEQUENCE = 11isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PathPaymentOp {
     pub sendAsset: Asset,
     pub sendMax: int64,
@@ -256,6 +273,7 @@ pub struct PathPaymentOp {
     pub path: Vec<Asset>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum PathPaymentResult {
     PATH_PAYMENT_NO_ISSUER(Asset),
     default,
@@ -278,6 +296,7 @@ pub enum PathPaymentResultCode {
     PATH_PAYMENT_OVER_SENDMAX = -12isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PaymentOp {
     pub destination: AccountID,
     pub asset: Asset,
@@ -304,6 +323,7 @@ pub enum PaymentResultCode {
     PAYMENT_NO_ISSUER = -9isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SetOptionsOp {
     pub inflationDest: Option<Box<AccountID>>,
     pub clearFlags: Option<Box<uint32>>,
@@ -336,17 +356,20 @@ pub enum SetOptionsResultCode {
     SET_OPTIONS_INVALID_HOME_DOMAIN = -9isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SimplePaymentResult {
     pub destination: AccountID,
     pub asset: Asset,
     pub amount: int64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TimeBounds {
     pub minTime: TimePoint,
     pub maxTime: TimePoint,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Transaction {
     pub sourceAccount: AccountID,
     pub fee: uint32,
@@ -356,11 +379,13 @@ pub struct Transaction {
     pub operations: Vec<Operation>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionEnvelope {
     pub tx: Transaction,
     pub signatures: Vec<DecoratedSignature>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionResult {
     pub feeCharged: int64,
 }
@@ -381,6 +406,7 @@ pub enum TransactionResultCode {
     txINTERNAL_ERROR = -11isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionSignaturePayload {
     pub networkId: Hash,
 }

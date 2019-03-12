@@ -7,6 +7,8 @@ edition = "2018"
 [dependencies]
 sha2 = "0.8.0" # suppose replace it with sodiumoxide
 rand = "0.6.5"
+log = "0.4"
+env_logger = "0.6.0"
 xdr-codec = { git = "https://github.com/jsgf/rust-xdr" }
 xdrgen = { git = "https://github.com/jsgf/rust-xdr" }
 

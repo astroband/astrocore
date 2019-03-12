@@ -10,6 +10,7 @@ pub const MASK_OFFERENTRY_FLAGS: i64 = 1i64;
 
 pub const MASK_TRUSTLINE_FLAGS: i64 = 1i64;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AccountEntry {
     pub accountID: AccountID,
     pub balance: int64,
@@ -29,17 +30,20 @@ pub enum AccountFlags {
     AUTH_IMMUTABLE_FLAG = 4isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Asset {
     ASSET_TYPE_NATIVE,
     ASSET_TYPE_CREDIT_ALPHANUM4(AssetAlphaNum4),
     ASSET_TYPE_CREDIT_ALPHANUM12(AssetAlphaNum12),
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AssetAlphaNum12 {
     pub assetCode: [u8; 12i64 as usize],
     pub issuer: AccountID,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AssetAlphaNum4 {
     pub assetCode: [u8; 4i64 as usize],
     pub issuer: AccountID,
@@ -52,6 +56,7 @@ pub enum AssetType {
     ASSET_TYPE_CREDIT_ALPHANUM12 = 2isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DataEntry {
     pub accountID: AccountID,
     pub dataName: string64,
@@ -68,11 +73,13 @@ pub enum EnvelopeType {
     ENVELOPE_TYPE_AUTH = 3isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerEntry {
     pub lastModifiedLedgerSeq: uint32,
     pub data: LedgerEntryData,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LedgerEntryData {
     ACCOUNT(AccountEntry),
     TRUSTLINE(TrustLineEntry),
@@ -88,11 +95,13 @@ pub enum LedgerEntryType {
     DATA = 3isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Liabilities {
     pub buying: int64,
     pub selling: int64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OfferEntry {
     pub sellerID: AccountID,
     pub offerID: uint64,
@@ -108,11 +117,13 @@ pub enum OfferEntryFlags {
     PASSIVE_FLAG = 1isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Price {
     pub n: int32,
     pub d: int32,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Signer {
     pub key: SignerKey,
     pub weight: uint32,
@@ -129,6 +140,7 @@ pub enum ThresholdIndexes {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Thresholds(pub [u8; 4i64 as usize]);
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TrustLineEntry {
     pub accountID: AccountID,
     pub asset: Asset,

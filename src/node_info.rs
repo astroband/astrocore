@@ -14,12 +14,12 @@ pub struct NodeInfo {
 
 impl NodeInfo {
     /// Return Node instance
-    /// NOTE: TEST NETWORK HARDCODED
-    pub fn new_test(seed: String) -> NodeInfo {
+    pub fn new(seed: String, stellar_network: &Vec<u8>) -> NodeInfo {
         let key_pair = crypto::KeyPair::from_secret_seed(&seed).unwrap();
 
         let mut network_id: [u8; 32i64 as usize] = Default::default();
-        network_id.copy_from_slice(&network::Network::test_network().network_id()[..]);
+        // network_id.copy_from_slice(&network::Network::test_network().network_id()[..]);
+        network_id.copy_from_slice(&stellar_network[..]);
 
         NodeInfo {
             secret_seed: seed.clone(),

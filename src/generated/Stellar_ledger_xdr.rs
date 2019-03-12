@@ -4,6 +4,7 @@
 //
 // DO NOT EDIT
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum BucketEntry {
     LIVEENTRY(LedgerEntry),
     DEADENTRY(LedgerKey),
@@ -15,6 +16,7 @@ pub enum BucketEntryType {
     DEADENTRY = 1isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LedgerEntryChange {
     LEDGER_ENTRY_CREATED(LedgerEntry),
     LEDGER_ENTRY_UPDATED(LedgerEntry),
@@ -30,6 +32,7 @@ pub enum LedgerEntryChangeType {
     LEDGER_ENTRY_STATE = 3isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerEntryChanges(pub Vec<LedgerEntryChange>);
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -40,6 +43,7 @@ pub enum LedgerEntryKeyType {
     LEDGER_ENTRY_KEY_TYPE_DATA = 3isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerHeader {
     pub ledgerVersion: uint32,
     pub previousLedgerHash: Hash,
@@ -57,11 +61,13 @@ pub struct LedgerHeader {
     pub skipList: [Hash; 4i64 as usize],
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerHeaderHistoryEntry {
     pub hash: Hash,
     pub header: LedgerHeader,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LedgerKey {
     LEDGER_ENTRY_KEY_TYPE_ACCOUNT(LedgerKeyAccount),
     LEDGER_ENTRY_KEY_TYPE_TRUSTLINE(LedgerKeyTrustLine),
@@ -69,30 +75,36 @@ pub enum LedgerKey {
     LEDGER_ENTRY_KEY_TYPE_DATA(LedgerKeyTrustData),
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerKeyAccount {
     pub accountID: AccountID,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerKeyTrustData {
     pub accountID: AccountID,
     pub dataName: string64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerKeyTrustLine {
     pub accountID: AccountID,
     pub asset: Asset,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerKeyTrustOffer {
     pub sellerID: AccountID,
     pub offerID: uint64,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LedgerSCPMessages {
     pub ledgerSeq: uint32,
     pub messages: Vec<SCPEnvelope>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LedgerUpgrade {
     LEDGER_UPGRADE_VERSION(uint32),
     LEDGER_UPGRADE_BASE_FEE(uint32),
@@ -108,45 +120,54 @@ pub enum LedgerUpgradeType {
     LEDGER_UPGRADE_BASE_RESERVE = 4isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OperationMeta {
     pub changes: LedgerEntryChanges,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPHistoryEntryV0 {
     pub quorumSets: Vec<SCPQuorumSet>,
     pub ledgerMessages: LedgerSCPMessages,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StellarValue {
     pub txSetHash: Hash,
     pub closeTime: TimePoint,
     pub upgrades: Vec<UpgradeType>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionHistoryEntry {
     pub ledgerSeq: uint32,
     pub txSet: TransactionSet,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionHistoryResultEntry {
     pub ledgerSeq: uint32,
     pub txResultSet: TransactionResultSet,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionMetaV1 {
     pub txChanges: LedgerEntryChanges,
     pub operations: Vec<OperationMeta>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionResultPair {
     pub transactionHash: Hash,
     pub result: TransactionResult,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionResultSet {
     pub results: Vec<TransactionResultPair>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionSet {
     pub previousLedgerHash: Hash,
     pub txs: Vec<TransactionEnvelope>,

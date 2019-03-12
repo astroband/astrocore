@@ -4,34 +4,40 @@
 //
 // DO NOT EDIT
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPBallot {
     pub counter: uint32,
     pub value: Value,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPEnvelope {
     pub statement: SCPStatement,
     pub signature: Signature,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPNomination {
     pub quorumSetHash: Hash,
     pub votes: Vec<Value>,
     pub accepted: Vec<Value>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPQuorumSet {
     pub threshold: uint32,
     pub validators: Vec<PublicKey>,
     pub innerSets: Vec<SCPQuorumSet>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPStatement {
     pub nodeID: NodeID,
     pub slotIndex: uint64,
     pub pledges: ScpStatementPledges,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPStatementConfirm {
     pub ballot: SCPBallot,
     pub nPrepared: uint32,
@@ -40,18 +46,21 @@ pub struct SCPStatementConfirm {
     pub quorumSetHash: Hash,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPStatementExternalize {
     pub commit: SCPBallot,
     pub nH: uint32,
     pub commitQuorumSetHash: Hash,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPStatementPledges {
     pub commit: SCPBallot,
     pub nH: uint32,
     pub commitQuorumSetHash: Hash,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SCPStatementPrepare {
     pub quorumSetHash: Hash,
     pub ballot: SCPBallot,
@@ -69,6 +78,7 @@ pub enum SCPStatementType {
     SCP_ST_NOMINATE = 3isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ScpStatementPledges {
     SCP_ST_PREPARE(SCPStatementPrepare),
     SCP_ST_CONFIRM(SCPStatementConfirm),

@@ -1,5 +1,6 @@
 use rand::Rng;
 use sha2::Digest;
+use log::{info, error, debug};
 
 use byteorder::{BigEndian, WriteBytesExt};
 use std::io::{Cursor, Read, Write};
@@ -107,13 +108,19 @@ impl<'a> Peer<'a> {
     /// Start connection process to peer.
     /// More additional info: https://github.com/stellar/stellar-core/blob/ddef8bcacc5193bdd4daa07af404f1b6b1adaf39/src/overlay/OverlayManagerImpl.cpp#L28-L45
     pub fn start_authentication(&mut self) -> () {
-        self.send_hello_message();
+        info!("Started authentication proccess...");
+
+        self.send_message(
+            xdr::StellarMessage::HELLO(self.hello.clone())
+        );
         let stellar_hello_message = self.receive_message();
         self.handle_hello(stellar_hello_message.V0.message);
-        self.send_auth_message();
-        let stellar_auth_message = self.receive_message();
+        self.send_message(
+            xdr::StellarMessage::AUTH(xdr::Auth { unused: 0 })
+        );
+        self.receive_message(); // last auth message from remote peer
 
-        // auth complete!
+        info!("Authentication completed!");
     }
 
     fn handle_hello(&mut self, received_hello: xdr::StellarMessage) {
@@ -126,6 +133,7 @@ impl<'a> Peer<'a> {
         }
     }
 
+    /// Set hmac keys with remote peer
     fn set_remote_keys(
         &mut self,
         remote_pub_key: xdr::Curve25519Public,
@@ -147,7 +155,7 @@ impl<'a> Peer<'a> {
             crypto::Curve25519Public::scalarmult(&self.auth_secret_key, &remote_pub_key.key);
 
         let mut buffer: Vec<u8> = Default::default();
-        buffer.copy_from_slice(&scalarmult[..]);
+        buffer.extend(&scalarmult[..]);
         buffer.extend(publicA.iter().cloned());
         buffer.extend(publicB.iter().cloned());
 
@@ -226,51 +234,28 @@ impl<'a> Peer<'a> {
         }
     }
 
-    /// Send special xdr::HELLO message to initiate handsnake process
-    fn send_hello_message(&mut self) {
-        let hello_message = xdr::StellarMessage::HELLO(self.hello.clone());
-
-        let am0 = xdr::AuthenticatedMessageV0 {
-            sequence: 0 as xdr::uint64,
-            message: hello_message,
-            mac: xdr::HmacSha256Mac {
-                mac: crypto::HmacSha256Mac::zero().0,
-            },
-        };
-
-        let mut packed_hello_message = Vec::new();
-        let am = xdr::AuthenticatedMessage{
-            V: 0 as xdr::uint32,
-            V0: am0
-        };
-        xdr_codec::pack(&am, &mut packed_hello_message).unwrap();
-
-        self.send_header(packed_hello_message.len() as u32);
-
-        self.stream.write(&packed_hello_message[..]).unwrap();
-    }
-
-    fn send_auth_message(&mut self) {
-        // Auth is just an empty message with a valid mac
-        let message = xdr::StellarMessage::AUTH(xdr::Auth { unused: 0 });
-
+    // TODO: mutex required?
+    fn send_message(&mut self, message: xdr::StellarMessage) {
         let mut am0 = xdr::AuthenticatedMessageV0 {
             sequence: self.send_message_sequence,
-            message: message,
+            message: message.clone(),
             mac: xdr::HmacSha256Mac {
                 mac: crypto::HmacSha256Mac::zero().0,
             },
         };
 
-
-        let mut packed_auth_message_v0 = Vec::new();
-        xdr_codec::pack(&am0.sequence, &mut packed_auth_message_v0).unwrap();
-        xdr_codec::pack(&am0.message, &mut packed_auth_message_v0).unwrap();
-        let mac =
-            crypto::HmacSha256Mac::authenticate(&packed_auth_message_v0[..], &self.sended_mac_key);
-        am0.mac = xdr::HmacSha256Mac { mac: mac.0 };
-        self.increment_message_sequence();
-
+        match message {
+            xdr::StellarMessage::HELLO(_) | xdr::StellarMessage::ERROR_MSG(_) => {},
+            _ => {
+                let mut packed_auth_message_v0 = Vec::new();
+                xdr_codec::pack(&am0.sequence, &mut packed_auth_message_v0).unwrap();
+                xdr_codec::pack(&am0.message, &mut packed_auth_message_v0).unwrap();
+                let mac =
+                    crypto::HmacSha256Mac::authenticate(&packed_auth_message_v0[..], &self.sended_mac_key);
+                am0.mac = xdr::HmacSha256Mac { mac: mac.0 };
+                self.increment_message_sequence();
+            }
+        };
 
         let mut packed_auth_message = Vec::new();
         let am = xdr::AuthenticatedMessage{
@@ -315,53 +300,46 @@ impl<'a> Peer<'a> {
         message_length <<= 8;
         message_length |= header[3] as usize;
 
+        debug!("RECEIVE HEADER {:?} \nWITH LENGTH {:?}", header, message_length);
+
         return message_length;
     }
 
     /// Recieved auth message from remote peer
-    fn receive_message(&mut self) -> xdr::AuthenticatedMessage {
+    pub fn receive_message(&mut self) -> xdr::AuthenticatedMessage {
         let message_length = self.receive_header();
 
-        let mut message_content: Vec<u8> = Vec::with_capacity(message_length);
+        let mut message_content = vec![0u8; message_length];
 
         self.stream.read_exact(&mut message_content).unwrap();
 
+        // Use pattern matcher Luke!
+        // Dirty hack >>>
+        let am0 = xdr::AuthenticatedMessageV0 {
+            sequence: self.send_message_sequence,
+            message: xdr::StellarMessage::HELLO(self.hello.clone()),
+            mac: xdr::HmacSha256Mac {
+                mac: crypto::HmacSha256Mac::zero().0,
+            },
+        };
+        let stub = xdr::AuthenticatedMessage{
+            V: 0 as xdr::uint32,
+            V0: am0
+        };
+        // <<< Dirty hack
+
         let mut cursor = Cursor::new(message_content);
         let authenticated_message: xdr::AuthenticatedMessage =
-            xdr_codec::unpack(&mut cursor).unwrap();
+            xdr_codec::unpack(&mut cursor).unwrap_or(stub.clone());
+        
+        if authenticated_message == stub {
+            error!("Cant read message with length header: {:?}\nNext received message is stub", message_length);
+        }
 
         return authenticated_message;
     }
 
     fn increment_message_sequence(&mut self) {
         self.send_message_sequence = self.send_message_sequence + 1;
-    }
-}
-
-// NOTE: should be implemented by xdrgen
-impl Clone for xdr::AuthCert {
-    fn clone(&self) -> xdr::AuthCert {
-        xdr::AuthCert {
-            pubkey: self.pubkey.clone(),
-            expiration: self.expiration.clone(),
-            sig: self.sig.clone(),
-        }
-    }
-}
-
-// NOTE: should be implemented by xdrgen
-impl Clone for xdr::Hello {
-    fn clone(&self) -> xdr::Hello {
-        xdr::Hello {
-            ledgerVersion: self.ledgerVersion.clone(),
-            overlayVersion: self.overlayVersion.clone(),
-            overlayMinVersion: self.overlayMinVersion.clone(),
-            networkID: self.networkID.clone(),
-            versionStr: self.versionStr.clone(),
-            listeningPort: self.listeningPort.clone(),
-            peerID: self.peerID.clone(),
-            cert: self.cert.clone(),
-            nonce: self.nonce.clone(),
-        }
     }
 }

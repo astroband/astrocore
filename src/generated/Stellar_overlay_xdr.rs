@@ -9,12 +9,14 @@ pub struct Auth {
     pub unused: i32,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AuthCert {
     pub pubkey: Curve25519Public,
     pub expiration: uint64,
     pub sig: Signature,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AuthenticatedMessage {
     pub V: uint32,
     pub V0: AuthenticatedMessageV0,
@@ -25,12 +27,14 @@ pub enum AuthenticatedMessageType {
     V0 = 0isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AuthenticatedMessageV0 {
     pub sequence: uint64,
     pub message: StellarMessage,
     pub mac: HmacSha256Mac,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DontHave {
     pub type_: MessageType,
     pub reqHash: uint256,
@@ -51,6 +55,7 @@ pub enum ErrorCode {
     ERR_LOAD = 4isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Hello {
     pub ledgerVersion: uint32,
     pub overlayVersion: uint32,
@@ -86,11 +91,13 @@ pub enum MessageType {
     HELLO = 13isize,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PeerAddress {
     pub port: uint32,
     pub numFailures: uint32,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum StellarMessage {
     ERROR_MSG(Error),
     HELLO(Hello),
