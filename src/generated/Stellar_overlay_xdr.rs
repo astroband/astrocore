@@ -93,8 +93,15 @@ pub enum MessageType {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PeerAddress {
+    pub ip: PeerAddressIP,
     pub port: uint32,
     pub numFailures: uint32,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum PeerAddressIP {
+    IPv4([u8; 4i64 as usize]),
+    IPv6([u8; 16i64 as usize]),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -197,7 +204,22 @@ impl<Out: xdr_codec::Write> xdr_codec::Pack<Out> for MessageType {
 
 impl<Out: xdr_codec::Write> xdr_codec::Pack<Out> for PeerAddress {
     fn pack(&self, out: &mut Out) -> xdr_codec::Result<usize> {
-        Ok(self.port.pack(out)? + self.numFailures.pack(out)? + 0)
+        Ok(self.ip.pack(out)? + self.port.pack(out)? + self.numFailures.pack(out)? + 0)
+    }
+}
+
+impl<Out: xdr_codec::Write> xdr_codec::Pack<Out> for PeerAddressIP {
+    fn pack(&self, out: &mut Out) -> xdr_codec::Result<usize> {
+        Ok(match self {
+            &PeerAddressIP::IPv4(ref val) => {
+                (IPAddrType::IPv4 as i32).pack(out)?
+                    + xdr_codec::pack_opaque_array(&val[..], val.len(), out)?
+            }
+            &PeerAddressIP::IPv6(ref val) => {
+                (IPAddrType::IPv6 as i32).pack(out)?
+                    + xdr_codec::pack_opaque_array(&val[..], val.len(), out)?
+            }
+        })
     }
 }
 
@@ -529,6 +551,11 @@ impl<In: xdr_codec::Read> xdr_codec::Unpack<In> for PeerAddress {
         let mut sz = 0;
         Ok((
             PeerAddress {
+                ip: {
+                    let (v, fsz) = xdr_codec::Unpack::unpack(input)?;
+                    sz += fsz;
+                    v
+                },
                 port: {
                     let (v, fsz) = xdr_codec::Unpack::unpack(input)?;
                     sz += fsz;
@@ -539,6 +566,42 @@ impl<In: xdr_codec::Read> xdr_codec::Unpack<In> for PeerAddress {
                     sz += fsz;
                     v
                 },
+            },
+            sz,
+        ))
+    }
+}
+
+impl<In: xdr_codec::Read> xdr_codec::Unpack<In> for PeerAddressIP {
+    fn unpack(input: &mut In) -> xdr_codec::Result<(PeerAddressIP, usize)> {
+        let mut sz = 0;
+        Ok((
+            match {
+                let (v, dsz): (i32, _) = xdr_codec::Unpack::unpack(input)?;
+                sz += dsz;
+                v
+            } {
+                x if x == (0i32 as i32) => PeerAddressIP::IPv4({
+                    let (v, fsz) = {
+                        let mut buf: [u8; 4i64 as usize] = unsafe { ::std::mem::uninitialized() };
+                        let sz =
+                            xdr_codec::unpack_opaque_array(input, &mut buf[..], 4i64 as usize)?;
+                        (buf, sz)
+                    };
+                    sz += fsz;
+                    v
+                }),
+                x if x == (1i32 as i32) => PeerAddressIP::IPv6({
+                    let (v, fsz) = {
+                        let mut buf: [u8; 16i64 as usize] = unsafe { ::std::mem::uninitialized() };
+                        let sz =
+                            xdr_codec::unpack_opaque_array(input, &mut buf[..], 16i64 as usize)?;
+                        (buf, sz)
+                    };
+                    sz += fsz;
+                    v
+                }),
+                v => return Err(xdr_codec::Error::invalidcase(v as i32)),
             },
             sz,
         ))

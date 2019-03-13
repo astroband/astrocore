@@ -65,8 +65,17 @@ struct PeerAddress
     //    opaque ipv6[16];
     //}
     //ip;
+    PeerAddressIP ip; //compability struct
     uint32 port;
     uint32 numFailures;
+};
+
+union PeerAddressIP switch (IPAddrType type) //compability struct
+{
+case IPv4:
+    opaque ipv4[4];
+case IPv6:
+    opaque ipv6[16];
 };
 
 enum MessageType

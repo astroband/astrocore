@@ -1,6 +1,6 @@
+use log::{debug, error, info};
 use rand::Rng;
 use sha2::Digest;
-use log::{info, error, debug};
 
 use byteorder::{BigEndian, WriteBytesExt};
 use std::io::{Cursor, Read, Write};
@@ -110,14 +110,10 @@ impl<'a> Peer<'a> {
     pub fn start_authentication(&mut self) -> () {
         info!("Started authentication proccess...");
 
-        self.send_message(
-            xdr::StellarMessage::HELLO(self.hello.clone())
-        );
+        self.send_message(xdr::StellarMessage::HELLO(self.hello.clone()));
         let stellar_hello_message = self.receive_message();
         self.handle_hello(stellar_hello_message.V0.message);
-        self.send_message(
-            xdr::StellarMessage::AUTH(xdr::Auth { unused: 0 })
-        );
+        self.send_message(xdr::StellarMessage::AUTH(xdr::Auth { unused: 0 }));
         self.receive_message(); // last auth message from remote peer
 
         info!("Authentication completed!");
@@ -245,22 +241,24 @@ impl<'a> Peer<'a> {
         };
 
         match message {
-            xdr::StellarMessage::HELLO(_) | xdr::StellarMessage::ERROR_MSG(_) => {},
+            xdr::StellarMessage::HELLO(_) | xdr::StellarMessage::ERROR_MSG(_) => {}
             _ => {
                 let mut packed_auth_message_v0 = Vec::new();
                 xdr_codec::pack(&am0.sequence, &mut packed_auth_message_v0).unwrap();
                 xdr_codec::pack(&am0.message, &mut packed_auth_message_v0).unwrap();
-                let mac =
-                    crypto::HmacSha256Mac::authenticate(&packed_auth_message_v0[..], &self.sended_mac_key);
+                let mac = crypto::HmacSha256Mac::authenticate(
+                    &packed_auth_message_v0[..],
+                    &self.sended_mac_key,
+                );
                 am0.mac = xdr::HmacSha256Mac { mac: mac.0 };
                 self.increment_message_sequence();
             }
         };
 
         let mut packed_auth_message = Vec::new();
-        let am = xdr::AuthenticatedMessage{
+        let am = xdr::AuthenticatedMessage {
             V: 0 as xdr::uint32,
-            V0: am0
+            V0: am0,
         };
         xdr_codec::pack(&am, &mut packed_auth_message).unwrap();
 
@@ -300,7 +298,10 @@ impl<'a> Peer<'a> {
         message_length <<= 8;
         message_length |= header[3] as usize;
 
-        debug!("RECEIVE HEADER {:?} \nWITH LENGTH {:?}", header, message_length);
+        debug!(
+            "RECEIVE HEADER {:?} \nWITH LENGTH {:?}",
+            header, message_length
+        );
 
         return message_length;
     }
@@ -322,18 +323,21 @@ impl<'a> Peer<'a> {
                 mac: crypto::HmacSha256Mac::zero().0,
             },
         };
-        let stub = xdr::AuthenticatedMessage{
+        let stub = xdr::AuthenticatedMessage {
             V: 0 as xdr::uint32,
-            V0: am0
+            V0: am0,
         };
         // <<< Dirty hack
 
         let mut cursor = Cursor::new(message_content);
         let authenticated_message: xdr::AuthenticatedMessage =
             xdr_codec::unpack(&mut cursor).unwrap_or(stub.clone());
-        
+
         if authenticated_message == stub {
-            error!("Cant read message with length header: {:?}\nNext received message is stub", message_length);
+            error!(
+                "Cant read message with length header: {:?}\nNext received message is stub",
+                message_length
+            );
         }
 
         return authenticated_message;

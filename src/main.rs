@@ -1,9 +1,9 @@
 extern crate xdr_codec;
 extern crate xdrgen;
 
-use std::net::{TcpStream};
+use log::{error, info};
+use std::net::TcpStream;
 use std::time::Duration;
-use log::{info, error};
 
 mod crypto;
 mod network;
