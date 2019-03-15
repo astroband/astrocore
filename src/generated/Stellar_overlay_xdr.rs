@@ -9,7 +9,7 @@ pub struct Auth {
     pub unused: i32,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct AuthCert {
     pub pubkey: Curve25519Public,
     pub expiration: uint64,

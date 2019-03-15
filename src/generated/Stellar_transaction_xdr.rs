@@ -43,7 +43,7 @@ pub enum AllowTrustResultCode {
     ALLOW_TRUST_SELF_NOT_ALLOWED = -5isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct BumpSequenceOp {
     pub bumpTo: SequenceNumber,
 }
@@ -121,7 +121,7 @@ pub struct CreatePassiveOfferOp {
     pub price: Price,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct DecoratedSignature {
     pub hint: SignatureHint,
     pub signature: Signature,
@@ -145,7 +145,7 @@ pub enum InflationResultCode {
     INFLATION_NOT_TIME = -1isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct ManageDataOp {
     pub dataName: string64,
     pub dataValue: Option<Box<DataValue>>,
@@ -205,7 +205,7 @@ pub enum ManageOfferResultCode {
     MANAGE_OFFER_LOW_RESERVE = -12isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct ManageOfferSuccessResult {
     pub offersClaimed: Vec<ClaimOfferAtom>,
 }
@@ -228,7 +228,7 @@ pub enum MemoType {
     MEMO_RETURN = 4isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct Operation {
     pub sourceAccount: Option<Box<AccountID>>,
 }
@@ -323,7 +323,7 @@ pub enum PaymentResultCode {
     PAYMENT_NO_ISSUER = -9isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct SetOptionsOp {
     pub inflationDest: Option<Box<AccountID>>,
     pub clearFlags: Option<Box<uint32>>,
@@ -363,7 +363,7 @@ pub struct SimplePaymentResult {
     pub amount: int64,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TimeBounds {
     pub minTime: TimePoint,
     pub maxTime: TimePoint,
@@ -385,7 +385,7 @@ pub struct TransactionEnvelope {
     pub signatures: Vec<DecoratedSignature>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionResult {
     pub feeCharged: int64,
 }
@@ -406,7 +406,7 @@ pub enum TransactionResultCode {
     txINTERNAL_ERROR = -11isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionSignaturePayload {
     pub networkId: Hash,
 }

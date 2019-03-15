@@ -11,25 +11,25 @@ pub enum CryptoKeyType {
     KEY_TYPE_HASH_X = 2isize,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub struct Curve25519Public {
     pub key: [u8; 32i64 as usize],
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub struct Curve25519Secret {
     pub key: [u8; 32i64 as usize],
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub struct Hash(pub [u8; 32i64 as usize]);
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub struct HmacSha256Key {
     pub key: [u8; 32i64 as usize],
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub struct HmacSha256Mac {
     pub mac: [u8; 32i64 as usize],
 }
@@ -44,10 +44,10 @@ pub enum PublicKeyType {
     PUBLIC_KEY_TYPE_ED25519 = 0isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct Signature(pub Vec<u8>);
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub struct SignatureHint(pub [u8; 4i64 as usize]);
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -64,7 +64,7 @@ pub enum SignerKeyType {
     SIGNER_KEY_TYPE_HASH_X = 2isize,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 pub struct uint256(pub [u8; 32i64 as usize]);
 
 pub type NodeID = PublicKey;

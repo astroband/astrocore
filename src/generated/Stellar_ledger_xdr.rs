@@ -32,7 +32,7 @@ pub enum LedgerEntryChangeType {
     LEDGER_ENTRY_STATE = 3isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct LedgerEntryChanges(pub Vec<LedgerEntryChange>);
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -43,7 +43,7 @@ pub enum LedgerEntryKeyType {
     LEDGER_ENTRY_KEY_TYPE_DATA = 3isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct LedgerHeader {
     pub ledgerVersion: uint32,
     pub previousLedgerHash: Hash,
@@ -61,7 +61,7 @@ pub struct LedgerHeader {
     pub skipList: [Hash; 4i64 as usize],
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct LedgerHeaderHistoryEntry {
     pub hash: Hash,
     pub header: LedgerHeader,
@@ -98,7 +98,7 @@ pub struct LedgerKeyTrustOffer {
     pub offerID: uint64,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct LedgerSCPMessages {
     pub ledgerSeq: uint32,
     pub messages: Vec<SCPEnvelope>,
@@ -120,60 +120,60 @@ pub enum LedgerUpgradeType {
     LEDGER_UPGRADE_BASE_RESERVE = 4isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct OperationMeta {
     pub changes: LedgerEntryChanges,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct SCPHistoryEntryV0 {
     pub quorumSets: Vec<SCPQuorumSet>,
     pub ledgerMessages: LedgerSCPMessages,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct StellarValue {
     pub txSetHash: Hash,
     pub closeTime: TimePoint,
     pub upgrades: Vec<UpgradeType>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionHistoryEntry {
     pub ledgerSeq: uint32,
     pub txSet: TransactionSet,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionHistoryResultEntry {
     pub ledgerSeq: uint32,
     pub txResultSet: TransactionResultSet,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionMetaV1 {
     pub txChanges: LedgerEntryChanges,
     pub operations: Vec<OperationMeta>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionResultPair {
     pub transactionHash: Hash,
     pub result: TransactionResult,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionResultSet {
     pub results: Vec<TransactionResultPair>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct TransactionSet {
     pub previousLedgerHash: Hash,
     pub txs: Vec<TransactionEnvelope>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct UpgradeType(pub Vec<u8>);
 
 impl<Out: xdr_codec::Write> xdr_codec::Pack<Out> for BucketEntry {

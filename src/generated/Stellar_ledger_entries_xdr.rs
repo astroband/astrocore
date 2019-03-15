@@ -63,7 +63,7 @@ pub struct DataEntry {
     pub dataValue: DataValue,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct DataValue(pub Vec<u8>);
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -95,7 +95,7 @@ pub enum LedgerEntryType {
     DATA = 3isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct Liabilities {
     pub buying: int64,
     pub selling: int64,
@@ -117,7 +117,7 @@ pub enum OfferEntryFlags {
     PASSIVE_FLAG = 1isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct Price {
     pub n: int32,
     pub d: int32,
@@ -154,10 +154,10 @@ pub enum TrustLineFlags {
     AUTHORIZED_FLAG = 1isize,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct string32(pub String);
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct string64(pub String);
 
 pub type AccountID = PublicKey;
