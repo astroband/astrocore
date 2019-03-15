@@ -1,4 +1,4 @@
-use log::{debug, error, info};
+use log::{debug, info};
 use rand::Rng;
 use sha2::Digest;
 
@@ -55,7 +55,6 @@ impl<'a> Peer<'a> {
         let peer_id = xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256 { 0: public_key });
 
         let auth_cert = Peer::get_auth_cert(&node_info, &auth_public_key);
-        let cloned_auth_cert = auth_cert.clone();
 
         let hello = xdr::Hello {
             ledgerVersion: 9000 as xdr::uint32,
@@ -65,7 +64,7 @@ impl<'a> Peer<'a> {
             versionStr: String::from("stellar-core-rust[alpha-0.0]"),
             listeningPort: 11625,
             peerID: peer_id,
-            cert: auth_cert,
+            cert: auth_cert.clone(),
             nonce: xdr::uint256 { 0: nonce },
         };
 
@@ -73,20 +72,16 @@ impl<'a> Peer<'a> {
             node_info: &node_info,
             stream: stream,
             send_message_sequence: 0 as xdr::uint64,
-            cached_auth_cert: cloned_auth_cert,
+            cached_auth_cert: auth_cert,
             auth_secret_key: auth_secret_key,
             auth_public_key: auth_public_key,
             auth_shared_key: crypto::HmacSha256Key::zero(),
             received_mac_key: crypto::HmacSha256Key::zero(),
             sended_mac_key: crypto::HmacSha256Key::zero(),
             nonce: nonce,
-            hello: hello.clone(),
+            hello: hello,
             address: address,
-            // TODO: put here empty xdr::Hello{} struct
-            // by implementing Default::default().
-            // For now we jsut put hello from our node
-            // to make this struct works
-            peer_info: hello,
+            peer_info: Default::default(),
         }
     }
 
@@ -324,5 +319,23 @@ impl<'a> Peer<'a> {
 
     fn increment_message_sequence(&mut self) {
         self.send_message_sequence = self.send_message_sequence + 1;
+    }
+}
+
+impl Default for xdr::Hello {
+    fn default() -> xdr::Hello {
+        xdr::Hello {
+            peerID: xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256 {
+                0: Default::default(),
+            }),
+            ledgerVersion: Default::default(),
+            overlayVersion: Default::default(),
+            overlayMinVersion: Default::default(),
+            networkID: Default::default(),
+            versionStr: Default::default(),
+            listeningPort: Default::default(),
+            cert: Default::default(),
+            nonce: Default::default(),
+        }
     }
 }
