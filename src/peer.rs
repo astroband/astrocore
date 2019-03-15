@@ -111,10 +111,10 @@ impl<'a> Peer<'a> {
         info!("Started authentication proccess...");
 
         self.send_message(xdr::StellarMessage::HELLO(self.hello.clone()));
-        let stellar_hello_message = self.receive_message();
+        let stellar_hello_message = self.receive_message().unwrap();
         self.handle_hello(stellar_hello_message.V0.message);
         self.send_message(xdr::StellarMessage::AUTH(xdr::Auth { unused: 0 }));
-        self.receive_message(); // last auth message from remote peer
+        self.receive_message().unwrap(); // last auth message from remote peer
 
         info!("Authentication completed!");
     }
@@ -231,6 +231,7 @@ impl<'a> Peer<'a> {
     }
 
     // TODO: mutex required?
+    /// Send XDR message to remote peer
     fn send_message(&mut self, message: xdr::StellarMessage) {
         let mut am0 = xdr::AuthenticatedMessageV0 {
             sequence: self.send_message_sequence,
@@ -307,38 +308,16 @@ impl<'a> Peer<'a> {
     }
 
     /// Recieved auth message from remote peer
-    pub fn receive_message(&mut self) -> xdr::AuthenticatedMessage {
+    pub fn receive_message(&mut self) -> Result<xdr::AuthenticatedMessage, xdr_codec::Error> {
         let message_length = self.receive_header();
 
         let mut message_content = vec![0u8; message_length];
 
         self.stream.read_exact(&mut message_content).unwrap();
 
-        // Use pattern matcher Luke!
-        // Dirty hack >>>
-        let am0 = xdr::AuthenticatedMessageV0 {
-            sequence: self.send_message_sequence,
-            message: xdr::StellarMessage::HELLO(self.hello.clone()),
-            mac: xdr::HmacSha256Mac {
-                mac: crypto::HmacSha256Mac::zero().0,
-            },
-        };
-        let stub = xdr::AuthenticatedMessage {
-            V: 0 as xdr::uint32,
-            V0: am0,
-        };
-        // <<< Dirty hack
-
         let mut cursor = Cursor::new(message_content);
-        let authenticated_message: xdr::AuthenticatedMessage =
-            xdr_codec::unpack(&mut cursor).unwrap_or(stub.clone());
-
-        if authenticated_message == stub {
-            error!(
-                "Cant read message with length header: {:?}\nNext received message is stub",
-                message_length
-            );
-        }
+        let authenticated_message: Result<xdr::AuthenticatedMessage, xdr_codec::Error> =
+            xdr_codec::unpack(&mut cursor);
 
         return authenticated_message;
     }

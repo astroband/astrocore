@@ -52,7 +52,10 @@ fn main() {
 
             loop {
                 let message_content = peer.receive_message();
-                info!("\n{:?}", message_content.V0.message);
+                match message_content {
+                    Ok(msg) => info!("\n{:?}", msg.V0.message),
+                    Err(e) => error!("Cant read XDR message cause: {}", e),
+                };
             }
         }
         Err(e) => {
