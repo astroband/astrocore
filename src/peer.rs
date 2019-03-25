@@ -10,6 +10,8 @@ use crate::crypto;
 use crate::node_info::NodeInfo;
 use crate::xdr;
 
+use serde_xdr;
+
 pub struct Peer<'a> {
     /// Information about our node
     node_info: &'a NodeInfo,
@@ -106,8 +108,13 @@ impl<'a> Peer<'a> {
         info!("Started authentication proccess...");
 
         self.send_message(xdr::StellarMessage::HELLO(self.hello.clone()));
-        let stellar_hello_message = self.receive_message().unwrap();
-        self.handle_hello(stellar_hello_message.V0.message);
+        match self.receive_message().unwrap() {
+            xdr::AuthenticatedMessage::V0(hello) => {
+                self.handle_hello(hello.message);
+            }
+            _ => unreachable!("Received not auth message!"),
+        }
+
         self.send_message(xdr::StellarMessage::AUTH(xdr::Auth { unused: 0 }));
         self.receive_message().unwrap(); // last auth message from remote peer
 
@@ -200,14 +207,14 @@ impl<'a> Peer<'a> {
 
         let mut buffer = Vec::new();
 
-        xdr_codec::pack(&node_info.network_id, &mut buffer).unwrap();
-        xdr_codec::pack(&xdr::EnvelopeType::ENVELOPE_TYPE_AUTH, &mut buffer).unwrap();
-        xdr_codec::pack(&expiration, &mut buffer).unwrap();
-        xdr_codec::pack(
+        serde_xdr::to_writer(&mut buffer, &node_info.network_id).unwrap();
+        serde_xdr::to_writer(&mut buffer, &xdr::EnvelopeType::ENVELOPE_TYPE_AUTH).unwrap();
+        serde_xdr::to_writer(&mut buffer, &expiration).unwrap();
+        serde_xdr::to_writer(
+            &mut buffer,
             &xdr::Curve25519Public {
                 key: auth_public_key.0,
             },
-            &mut buffer,
         )
         .unwrap();
 
@@ -240,8 +247,8 @@ impl<'a> Peer<'a> {
             xdr::StellarMessage::HELLO(_) | xdr::StellarMessage::ERROR_MSG(_) => {}
             _ => {
                 let mut packed_auth_message_v0 = Vec::new();
-                xdr_codec::pack(&am0.sequence, &mut packed_auth_message_v0).unwrap();
-                xdr_codec::pack(&am0.message, &mut packed_auth_message_v0).unwrap();
+                serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.sequence).unwrap();
+                serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.message).unwrap();
                 let mac = crypto::HmacSha256Mac::authenticate(
                     &packed_auth_message_v0[..],
                     &self.sended_mac_key,
@@ -251,12 +258,9 @@ impl<'a> Peer<'a> {
             }
         };
 
-        let mut packed_auth_message = Vec::new();
-        let am = xdr::AuthenticatedMessage {
-            V: 0 as xdr::uint32,
-            V0: am0,
-        };
-        xdr_codec::pack(&am, &mut packed_auth_message).unwrap();
+        let am = xdr::AuthenticatedMessage::V0(am0);
+
+        let packed_auth_message = serde_xdr::to_bytes(&am).unwrap();
 
         self.send_header(packed_auth_message.len() as u32);
 
@@ -302,17 +306,23 @@ impl<'a> Peer<'a> {
         return message_length;
     }
 
-    /// Recieved auth message from remote peer
-    pub fn receive_message(&mut self) -> Result<xdr::AuthenticatedMessage, xdr_codec::Error> {
+    pub fn receive_message(
+        &mut self,
+    ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> {
         let message_length = self.receive_header();
 
         let mut message_content = vec![0u8; message_length];
+        debug!("Message len {:?}", message_content.len());
 
         self.stream.read_exact(&mut message_content).unwrap();
+        debug!("Message content {:?}", message_content);
 
         let mut cursor = Cursor::new(message_content);
-        let authenticated_message: Result<xdr::AuthenticatedMessage, xdr_codec::Error> =
-            xdr_codec::unpack(&mut cursor);
+
+        let authenticated_message: Result<
+            xdr::AuthenticatedMessage,
+            serde_xdr::CompatDeserializationError,
+        > = serde_xdr::from_reader(&mut cursor);
 
         return authenticated_message;
     }

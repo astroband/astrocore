@@ -11,7 +11,8 @@ extern crate log;
 extern crate env_logger;
 
 extern crate serde;
-extern crate serde_bytes;
+#[macro_use]
+extern crate serde_xdr;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_xdr;
+extern crate serde_bytes;

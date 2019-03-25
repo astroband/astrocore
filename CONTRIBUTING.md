@@ -13,7 +13,7 @@ sodiumoxide libs in your OS
 2. git clone <forked_repo>
 3. run commands:
 ```bash
-RUST_LOG="stellar_explorer_rust=debug" RUSTFLAGS=-Awarnings cargo run
+RUST_LOG="astrocore=debug" RUSTFLAGS=-Awarnings cargo run
 ```
 4. Make changes
 5. Push your changes in repo

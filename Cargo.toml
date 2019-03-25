@@ -1,5 +1,5 @@
 [package]
-name = "stellar-explorer-rust"
+name = "astrocore"
 version = "0.1.0"
 authors = ["A.A.Abroskin <arkweid@evilmartians.com>"]
 edition = "2018"
@@ -9,8 +9,6 @@ sha2 = "0.8.0" # suppose replace it with sodiumoxide
 rand = "0.6.5"
 log = "0.4"
 env_logger = "0.6.0"
-xdr-codec = { git = "https://github.com/jsgf/rust-xdr" }
-xdrgen = { git = "https://github.com/jsgf/rust-xdr" }
 
 sodiumoxide = "0.2.0"
 byteorder = "1"
@@ -20,15 +18,12 @@ base64 = "0.9.0"
 num-traits = "0.1.41"
 num-bigint = "0.1.41"
 bigdecimal = "0.0.10"
-serde = "1.0.27"
+serde = { version = "1.0.27", features = ["derive"] }
+serde_repr = "0.1"
 serde_derive = "1.0.27"
 serde_bytes = "0.10.3"
 serde-xdr = "0.5.0"
 
-[build-dependencies]
-xdrgen = { git = "https://github.com/jsgf/rust-xdr" }
-
-# Профиль dev используется по умолчанию при вызове команды cargo build
 [profile.dev]
-debug = true  # Добавляет флаг `-g` для компилятора;
-opt-level = 0 # Отключаем оптимизацию кода;
+debug = true
+opt-level = 0

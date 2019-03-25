@@ -9,7 +9,7 @@ We already complete handsnake process with remote peer. So you can monitor all m
 1. Clone repo
 2. Run command:
 ```
-RUST_LOG="stellar_explorer_rust=debug" RUSTFLAGS=-Awarnings cargo run
+RUST_LOG="astrocore=debug" RUSTFLAGS=-Awarnings cargo run
 ```
 
 ## Current problems
