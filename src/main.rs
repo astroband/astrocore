@@ -1,6 +1,3 @@
-extern crate xdr_codec;
-extern crate xdrgen;
-
 use log::{error, info};
 use std::net::TcpStream;
 use std::time::Duration;
@@ -8,30 +5,10 @@ use std::time::Duration;
 mod crypto;
 mod network;
 mod peer;
+mod xdr;
 use peer::Peer;
 mod node_info;
 use node_info::NodeInfo;
-
-mod xdr {
-    use xdr_codec;
-
-    // NOTE: Return live-generated files, when xdrgen was completed
-    // for now just store generated files in repo
-
-    // include!(concat!(env!("OUT_DIR"), "/Stellar_types_xdr.rs"));
-    // include!(concat!(env!("OUT_DIR"), "/Stellar_SCP_xdr.rs"));
-    // include!(concat!(env!("OUT_DIR"), "/Stellar_ledger_entries_xdr.rs"));
-    // include!(concat!(env!("OUT_DIR"), "/Stellar_transaction_xdr.rs"));
-    // include!(concat!(env!("OUT_DIR"), "/Stellar_ledger_xdr.rs"));
-    // include!(concat!(env!("OUT_DIR"), "/Stellar_overlay_xdr.rs"));
-
-    include!("generated/Stellar_types_xdr.rs");
-    include!("generated/Stellar_SCP_xdr.rs");
-    include!("generated/Stellar_ledger_entries_xdr.rs");
-    include!("generated/Stellar_transaction_xdr.rs");
-    include!("generated/Stellar_ledger_xdr.rs");
-    include!("generated/Stellar_overlay_xdr.rs");
-}
 
 const SECRET_TEST_SEED: &str = "SATKBWSRLPHGM2FKMLZ4QNH64XYKP7J2O6U5QNFBJHYEXDSHN75R5MVE";
 
@@ -53,7 +30,7 @@ fn main() {
             loop {
                 let message_content = peer.receive_message();
                 match message_content {
-                    Ok(msg) => info!("\n{:?}", msg.V0.message),
+                    Ok(msg) => info!("\n{:?}", msg),
                     Err(e) => error!("Cant read XDR message cause: {}", e),
                 };
             }
