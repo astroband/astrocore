@@ -324,7 +324,8 @@ pub enum OperationResult {
     default,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum OperationResultCode {
     opINNER = 0,
     opBAD_AUTH = -1,
@@ -332,7 +333,8 @@ pub enum OperationResultCode {
     opNOT_SUPPORTED = -3,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum OperationType {
     CREATE_ACCOUNT = 0,
     PAYMENT = 1,
@@ -364,7 +366,8 @@ pub enum PathPaymentResult {
     default,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum PathPaymentResultCode {
     PATH_PAYMENT_SUCCESS = 0,
     PATH_PAYMENT_MALFORMED = -1,
@@ -394,7 +397,8 @@ pub enum PaymentResult {
     default,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum PaymentResultCode {
     PAYMENT_SUCCESS = 0,
     PAYMENT_MALFORMED = -1,
@@ -427,7 +431,8 @@ pub enum SetOptionsResult {
     default,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum SetOptionsResultCode {
     SET_OPTIONS_SUCCESS = 0,
     SET_OPTIONS_LOW_RESERVE = -1,
@@ -476,7 +481,8 @@ pub struct TransactionResult {
     pub feeCharged: int64,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum TransactionResultCode {
     txSUCCESS = 0,
     txFAILED = -1,
@@ -720,7 +726,8 @@ pub enum BucketEntry {
     DEADENTRY(LedgerKey),
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum BucketEntryType {
     LIVEENTRY = 0,
     DEADENTRY = 1,
@@ -822,7 +829,8 @@ pub enum LedgerUpgrade {
     LEDGER_UPGRADE_BASE_RESERVE(uint32),
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum LedgerUpgradeType {
     LEDGER_UPGRADE_VERSION = 1,
     LEDGER_UPGRADE_BASE_FEE = 2,
@@ -911,7 +919,8 @@ pub struct AccountEntry {
     pub signers: Vec<Signer>,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum AccountFlags {
     AUTH_REQUIRED_FLAG = 1,
     AUTH_REVOCABLE_FLAG = 2,
@@ -1022,7 +1031,8 @@ pub struct Signer {
     pub weight: uint32,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum ThresholdIndexes {
     THRESHOLD_MASTER_WEIGHT = 0,
     THRESHOLD_LOW = 1,
@@ -1042,7 +1052,8 @@ pub struct TrustLineEntry {
     pub flags: uint32,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
 pub enum TrustLineFlags {
     AUTHORIZED_FLAG = 1,
 }

@@ -16,3 +16,5 @@ extern crate serde_xdr;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_bytes;
+
+pub mod xdr;

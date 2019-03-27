@@ -52,7 +52,7 @@ impl<'a> Peer<'a> {
         let auth_secret_key = crypto::Curve25519Secret::random();
         let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
 
-        let mut public_key: [u8; 32i64 as usize] = Default::default();
+        let mut public_key: [u8; 32] = Default::default();
         public_key.copy_from_slice(node_info.key_pair.public_key().buf());
         let peer_id = xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256 { 0: public_key });
 
