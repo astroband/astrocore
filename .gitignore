@@ -2,3 +2,5 @@
 **/*.rs.bk
 
 xdr-test
+.byebug_history
+Gemfile.lock
