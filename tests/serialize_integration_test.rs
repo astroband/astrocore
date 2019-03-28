@@ -1,7 +1,5 @@
 mod factories;
-use factories::{external_xdr, internal_xdr};
-mod support;
-use support::prepare;
+use factories::{external_xdr, internal_xdr, prepare};
 
 #[test]
 fn hello() {
