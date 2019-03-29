@@ -22,7 +22,7 @@ fn authenticated_message() {
     let result: Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -43,7 +43,7 @@ fn stellar_message() {
     let result: Result<xdr::StellarMessage, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn transaction() {
     let result: Result<xdr::Transaction, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn transaction_account() {
     let result: Result<xdr::AccountID, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn memo() {
 
     let result: Result<xdr::Memo, serde_xdr::CompatDeserializationError> = from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn operation() {
     let result: Result<Vec<xdr::Operation>, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -106,7 +106,7 @@ fn seq_num() {
     let result: Result<xdr::SequenceNumber, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn transaction_ext() {
     let result: Result<xdr::TransactionExt, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -125,7 +125,7 @@ fn transaction_fee() {
 
     let result: Result<xdr::uint32, serde_xdr::CompatDeserializationError> = from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -163,7 +163,7 @@ fn authenticated_message_1() {
     let result: Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
 
 #[test]
@@ -189,5 +189,5 @@ fn authenticated_message_2() {
     let result: Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
-    assert!(result.is_ok(), "Broken Deserialize trait");
+    assert!(result.is_ok(), println!("{:?}", result));
 }
