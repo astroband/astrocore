@@ -20,7 +20,7 @@ fn main() {
     let peer_address = String::from("54.160.175.7:11625"); // test address
 
     match TcpStream::connect_timeout(&peer_address.parse().unwrap(), Duration::new(5, 0)) {
-        Ok(mut stream) => {
+        Ok(stream) => {
             info!("Successfully connected to peer {}", peer_address);
             let cloned_stream = stream.try_clone().expect("clone failed...");
 

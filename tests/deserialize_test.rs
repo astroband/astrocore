@@ -70,7 +70,7 @@ fn transaction_account() {
         245, 62, 211, 205, 58, 253, 65, 129, 99, 193, 1, 164, 30, 172, 186, 35,
     ];
 
-    let result: Result<xdr::AccountID, serde_xdr::CompatDeserializationError> =
+    let result: Result<xdr::AccountId, serde_xdr::CompatDeserializationError> =
         from_bytes(xdr_input);
 
     assert!(result.is_ok(), println!("{:?}", result));
@@ -123,7 +123,7 @@ fn transaction_ext() {
 fn transaction_fee() {
     let xdr_input = vec![0, 0, 0, 0, 0, 0, 0, 100];
 
-    let result: Result<xdr::uint32, serde_xdr::CompatDeserializationError> = from_bytes(xdr_input);
+    let result: Result<xdr::Uint32, serde_xdr::CompatDeserializationError> = from_bytes(xdr_input);
 
     assert!(result.is_ok(), println!("{:?}", result));
 }

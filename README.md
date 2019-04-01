@@ -26,5 +26,5 @@ bundle install
 3. Return to root directory
 4. Run
 ```
-RUSTFLAGS=-Awarnings cargo test --test serialize_integration_test
+RUSTFLAGS=-Awarnings cargo test
 ```

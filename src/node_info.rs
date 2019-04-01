@@ -1,5 +1,4 @@
 use crate::crypto;
-use crate::network;
 use crate::xdr;
 
 pub struct NodeInfo {
@@ -8,7 +7,6 @@ pub struct NodeInfo {
     /// Key pair
     pub key_pair: crypto::KeyPair,
     /// Hash for used network
-    /// NOTE: TEST NETWORK HARDCODED
     pub network_id: xdr::Hash,
 }
 
@@ -21,9 +19,9 @@ impl NodeInfo {
         network_id.copy_from_slice(&stellar_network[..]);
 
         NodeInfo {
-            secret_seed: seed.clone(),
+            secret_seed: seed,
             key_pair: key_pair,
-            network_id: xdr::Hash { 0: network_id },
+            network_id: xdr::Hash(network_id),
         }
     }
 }

@@ -44,6 +44,14 @@ pub fn build_auth_cert() -> String {
     cmd.replace("{pubkey}", &build_curve25519_public())
 }
 
+pub fn build_signature() -> String {
+    let cmd = r#"
+    print Stellar::Signature.to_xdr(pack [1,2,3,4,5])
+    exit(0)
+    "#;
+    cmd.to_string()
+}
+
 pub fn build_curve25519_public() -> String {
     let cmd = r#"
     Stellar::Curve25519Public.new.tap do |obj|
@@ -63,7 +71,7 @@ pub fn build_public_key() -> String {
 pub fn build_operation_result_code() -> String {
     let cmd = r#"
     print Stellar::OperationResultCode.to_xdr(Stellar::OperationResultCode.op_no_account)
-    return
+    exit(0)
     "#;
     cmd.to_string()
 }

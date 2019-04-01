@@ -87,3 +87,13 @@ fn authenticated_message() {
 
     assert_eq!(subject, expect);
 }
+
+#[test]
+fn signature() {
+    let (subject, expect) = prepare(
+        internal_xdr::build_signature(),
+        external_xdr::build_signature(),
+    );
+
+    assert_eq!(subject, expect);
+}

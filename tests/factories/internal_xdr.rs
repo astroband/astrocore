@@ -20,15 +20,15 @@ pub fn build_hello() -> xdr::Hello {
     ]);
 
     xdr::Hello {
-        ledgerVersion: 9000 as xdr::uint32,
-        overlayVersion: 9000 as xdr::uint32,
-        overlayMinVersion: 0 as xdr::uint32,
-        networkID: network_id,
-        versionStr: "stellar-core-rust[alpha-0.0]".to_string(),
-        listeningPort: 11625,
-        peerID: build_public_key(),
+        ledger_version: 9000 as xdr::Uint32,
+        overlay_version: 9000 as xdr::Uint32,
+        overlay_min_version: 0 as xdr::Uint32,
+        network_id: network_id,
+        version_str: "stellar-core-rust[alpha-0.0]".to_string(),
+        listening_port: 11625,
+        peer_id: build_public_key(),
         cert: build_auth_cert(),
-        nonce: xdr::uint256 { 0: nonce },
+        nonce: xdr::Uint256(nonce),
     }
 }
 
@@ -36,10 +36,12 @@ pub fn build_auth_cert() -> xdr::AuthCert {
     xdr::AuthCert {
         pubkey: build_curve25519_public(),
         expiration: 123,
-        sig: xdr::Signature {
-            0: [1, 2, 3, 4, 5].to_vec(),
-        },
+        sig: build_signature(),
     }
+}
+
+pub fn build_signature() -> xdr::Signature {
+    xdr::Signature([1, 2, 3, 4, 5].to_vec())
 }
 
 pub fn build_curve25519_public() -> xdr::Curve25519Public {
@@ -52,20 +54,18 @@ pub fn build_curve25519_public() -> xdr::Curve25519Public {
 }
 
 pub fn build_public_key() -> xdr::PublicKey {
-    xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256 {
-        0: [
+    xdr::PublicKey::Ed25519(xdr::Uint256([
             114, 102, 121, 110, 104, 105, 115, 100, 99, 122, 112, 112, 119, 105, 108, 121, 122,
             108, 102, 101, 107, 111, 102, 103, 109, 103, 106, 105, 98, 118, 110, 113,
-        ],
-    })
+    ]))
 }
 
 pub fn build_operation_result_code() -> xdr::OperationResultCode {
-    xdr::OperationResultCode::opNO_ACCOUNT
+    xdr::OperationResultCode::OpNoAccount
 }
 
 pub fn build_stellar_message_hello() -> xdr::StellarMessage {
-    xdr::StellarMessage::HELLO(build_hello())
+    xdr::StellarMessage::Hello(build_hello())
 }
 
 pub fn build_hmac_sha_256_mac() -> xdr::HmacSha256Mac {
@@ -79,7 +79,7 @@ pub fn build_hmac_sha_256_mac() -> xdr::HmacSha256Mac {
 
 pub fn build_authenticated_message_v0() -> xdr::AuthenticatedMessageV0 {
     xdr::AuthenticatedMessageV0 {
-        sequence: 4321 as xdr::uint64,
+        sequence: 4321 as xdr::Uint64,
         message: build_stellar_message_hello(),
         mac: build_hmac_sha_256_mac(),
     }
