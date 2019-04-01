@@ -18,7 +18,7 @@ pub struct Peer<'a> {
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
     /// Current message sequence position.
-    send_message_sequence: xdr::uint64,
+    send_message_sequence: xdr::Uint64,
     /// Signed certificate for a hour
     cached_auth_cert: xdr::AuthCert,
     // Authentication system keys. Our ECDH secret and public keys are randomized on startup
@@ -54,26 +54,26 @@ impl<'a> Peer<'a> {
 
         let mut public_key: [u8; 32] = Default::default();
         public_key.copy_from_slice(node_info.key_pair.public_key().buf());
-        let peer_id = xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256 { 0: public_key });
+        let peer_id = xdr::PublicKey::Ed25519(xdr::Uint256(public_key));
 
         let auth_cert = Peer::get_auth_cert(&node_info, &auth_public_key);
 
         let hello = xdr::Hello {
-            ledgerVersion: 9000 as xdr::uint32,
-            overlayVersion: 9000 as xdr::uint32,
-            overlayMinVersion: 0 as xdr::uint32,
-            networkID: node_info.network_id,
-            versionStr: String::from("stellar-core-rust[alpha-0.0]"),
-            listeningPort: 11625,
-            peerID: peer_id,
+            ledger_version: 9000 as xdr::Uint32,
+            overlay_version: 9000 as xdr::Uint32,
+            overlay_min_version: 0 as xdr::Uint32,
+            network_id: node_info.network_id,
+            version_str: String::from("stellar-core-rust[alpha-0.0]"),
+            listening_port: 11625,
+            peer_id: peer_id,
             cert: auth_cert.clone(),
-            nonce: xdr::uint256 { 0: nonce },
+            nonce: xdr::Uint256(nonce),
         };
 
         Peer {
             node_info: &node_info,
             stream: stream,
-            send_message_sequence: 0 as xdr::uint64,
+            send_message_sequence: 0 as xdr::Uint64,
             cached_auth_cert: auth_cert,
             auth_secret_key: auth_secret_key,
             auth_public_key: auth_public_key,
@@ -107,7 +107,7 @@ impl<'a> Peer<'a> {
     pub fn start_authentication(&mut self) -> () {
         info!("Started authentication proccess...");
 
-        self.send_message(xdr::StellarMessage::HELLO(self.hello.clone()));
+        self.send_message(xdr::StellarMessage::Hello(self.hello.clone()));
         match self.receive_message().unwrap() {
             xdr::AuthenticatedMessage::V0(hello) => {
                 self.handle_hello(hello.message);
@@ -115,7 +115,7 @@ impl<'a> Peer<'a> {
             _ => unreachable!("Received not auth message!"),
         }
 
-        self.send_message(xdr::StellarMessage::AUTH(xdr::Auth { unused: 0 }));
+        self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
         self.receive_message().unwrap(); // last auth message from remote peer
 
         info!("Authentication completed!");
@@ -123,7 +123,7 @@ impl<'a> Peer<'a> {
 
     fn handle_hello(&mut self, received_hello: xdr::StellarMessage) {
         match received_hello {
-            xdr::StellarMessage::HELLO(hello) => {
+            xdr::StellarMessage::Hello(hello) => {
                 self.set_remote_keys(hello.cert.pubkey, hello.nonce, true);
                 self.peer_info = hello;
             }
@@ -135,18 +135,18 @@ impl<'a> Peer<'a> {
     fn set_remote_keys(
         &mut self,
         remote_pub_key: xdr::Curve25519Public,
-        received_nonce: xdr::uint256,
+        received_nonce: xdr::Uint256,
         is_we_called: bool,
     ) {
-        let mut publicA: [u8; 32] = Default::default();
-        let mut publicB: [u8; 32] = Default::default();
+        let mut public_a: [u8; 32] = Default::default();
+        let mut public_b: [u8; 32] = Default::default();
 
         if is_we_called {
-            publicA.copy_from_slice(&self.auth_public_key.0[..]);
-            publicB.copy_from_slice(&remote_pub_key.key[..]);
+            public_a.copy_from_slice(&self.auth_public_key.0[..]);
+            public_b.copy_from_slice(&remote_pub_key.key[..]);
         } else {
-            publicA.copy_from_slice(&remote_pub_key.key[..]);
-            publicB.copy_from_slice(&self.auth_public_key.0[..]);
+            public_a.copy_from_slice(&remote_pub_key.key[..]);
+            public_b.copy_from_slice(&self.auth_public_key.0[..]);
         }
 
         let scalarmult =
@@ -154,8 +154,8 @@ impl<'a> Peer<'a> {
 
         let mut buffer: Vec<u8> = Default::default();
         buffer.extend(&scalarmult[..]);
-        buffer.extend(publicA.iter().cloned());
-        buffer.extend(publicB.iter().cloned());
+        buffer.extend(public_a.iter().cloned());
+        buffer.extend(public_b.iter().cloned());
 
         self.auth_shared_key = crypto::HmacSha256Key::hkdf_extract(&buffer[..]);
 
@@ -203,12 +203,12 @@ impl<'a> Peer<'a> {
             .as_secs();
 
         let expiration_limit: u64 = 3600; // 1 hour
-        let expiration: xdr::uint64 = expiration_limit + unix_time;
+        let expiration: xdr::Uint64 = expiration_limit + unix_time;
 
         let mut buffer = Vec::new();
 
         serde_xdr::to_writer(&mut buffer, &node_info.network_id).unwrap();
-        serde_xdr::to_writer(&mut buffer, &xdr::EnvelopeType::ENVELOPE_TYPE_AUTH).unwrap();
+        serde_xdr::to_writer(&mut buffer, &xdr::EnvelopeType::EnvelopeTypeAuth).unwrap();
         serde_xdr::to_writer(&mut buffer, &expiration).unwrap();
         serde_xdr::to_writer(
             &mut buffer,
@@ -228,7 +228,7 @@ impl<'a> Peer<'a> {
                 key: auth_public_key.0,
             },
             expiration: expiration,
-            sig: xdr::Signature { 0: sign.to_vec() },
+            sig: xdr::Signature(sign.to_vec()),
         }
     }
 
@@ -244,7 +244,7 @@ impl<'a> Peer<'a> {
         };
 
         match message {
-            xdr::StellarMessage::HELLO(_) | xdr::StellarMessage::ERROR_MSG(_) => {}
+            xdr::StellarMessage::Hello(_) | xdr::StellarMessage::Error(_) => {}
             _ => {
                 let mut packed_auth_message_v0 = Vec::new();
                 serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.sequence).unwrap();
@@ -329,23 +329,5 @@ impl<'a> Peer<'a> {
 
     fn increment_message_sequence(&mut self) {
         self.send_message_sequence = self.send_message_sequence + 1;
-    }
-}
-
-impl Default for xdr::Hello {
-    fn default() -> xdr::Hello {
-        xdr::Hello {
-            peerID: xdr::PublicKey::PUBLIC_KEY_TYPE_ED25519(xdr::uint256 {
-                0: Default::default(),
-            }),
-            ledgerVersion: Default::default(),
-            overlayVersion: Default::default(),
-            overlayMinVersion: Default::default(),
-            networkID: Default::default(),
-            versionStr: Default::default(),
-            listeningPort: Default::default(),
-            cert: Default::default(),
-            nonce: Default::default(),
-        }
     }
 }

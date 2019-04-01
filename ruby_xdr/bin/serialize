@@ -16,3 +16,5 @@ end
 struct = eval(cmd)
 
 print struct.to_xdr
+
+exit(0)
