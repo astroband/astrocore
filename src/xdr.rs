@@ -78,9 +78,9 @@ pub type Int64 = i64;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum CryptoKeyType {
-  KeyTypeEd25519 = 0,
-  KeyTypePreAuthTx = 1,
-  KeyTypeHashX = 2,
+    KeyTypeEd25519 = 0,
+    KeyTypePreAuthTx = 1,
+    KeyTypeHashX = 2,
 }
 
 /*
@@ -94,11 +94,13 @@ pub enum CryptoKeyType {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum PublicKeyType {
-  PublicKeyTypeEd25519 = 0,
+    PublicKeyTypeEd25519 = 0,
 }
 
 impl Default for PublicKeyType {
-    fn default() -> Self { PublicKeyType::PublicKeyTypeEd25519 }
+    fn default() -> Self {
+        PublicKeyType::PublicKeyTypeEd25519
+    }
 }
 
 /*
@@ -114,9 +116,9 @@ impl Default for PublicKeyType {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum SignerKeyType {
-  SignerKeyTypeEd25519 = 0,
-  SignerKeyTypePreAuthTx = 1,
-  SignerKeyTypeHashX = 2,
+    SignerKeyTypeEd25519 = 0,
+    SignerKeyTypePreAuthTx = 1,
+    SignerKeyTypeHashX = 2,
 }
 
 /*
@@ -130,37 +132,41 @@ pub enum SignerKeyType {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum PublicKey {
-  Ed25519(Uint256),
+    Ed25519(Uint256),
 }
 
 impl Default for PublicKey {
-    fn default() -> Self { PublicKey::Ed25519(Uint256::default()) }
+    fn default() -> Self {
+        PublicKey::Ed25519(Uint256::default())
+    }
 }
 
 /*
-   SignerKey is an XDR Union defined as:
+SignerKey is an XDR Union defined as:
 
-     union SignerKey switch (SignerKeyType type)
-     {
-     case SIGNER_KEY_TYPE_ED25519:
-         uint256 ed25519;
-     case SIGNER_KEY_TYPE_PRE_AUTH_TX:
-         /* SHA-256 Hash of TransactionSignaturePayload structure */
-         uint256 preAuthTx;
-     case SIGNER_KEY_TYPE_HASH_X:
-         /* Hash of random 256 bit preimage X */
-         uint256 hashX;
-     };
+  union SignerKey switch (SignerKeyType type)
+  {
+  case SIGNER_KEY_TYPE_ED25519:
+      uint256 ed25519;
+  case SIGNER_KEY_TYPE_PRE_AUTH_TX:
+      /* SHA-256 Hash of TransactionSignaturePayload structure */
+uint256 preAuthTx;
+case SIGNER_KEY_TYPE_HASH_X:
+/* Hash of random 256 bit preimage X */
+uint256 hashX;
+};
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum SignerKey {
-  Ed25519(Uint256),
-  PreAuthTx(Uint256),
-  HashX(Uint256),
+    Ed25519(Uint256),
+    PreAuthTx(Uint256),
+    HashX(Uint256),
 }
 
 impl Default for SignerKey {
-    fn default() -> Self { SignerKey::Ed25519(Uint256::default()) }
+    fn default() -> Self {
+        SignerKey::Ed25519(Uint256::default())
+    }
 }
 
 /*
@@ -196,7 +202,8 @@ pub type NodeId = PublicKey;
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Curve25519Secret {
-  #[serde(with = "opaque_data::fixed_length")] pub key: [u8; 32],
+    #[serde(with = "opaque_data::fixed_length")]
+    pub key: [u8; 32],
 }
 
 /*
@@ -209,7 +216,8 @@ pub struct Curve25519Secret {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Curve25519Public {
-  #[serde(with = "opaque_data::fixed_length")] pub key: [u8; 32],
+    #[serde(with = "opaque_data::fixed_length")]
+    pub key: [u8; 32],
 }
 
 /*
@@ -222,7 +230,8 @@ pub struct Curve25519Public {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct HmacSha256Key {
-  #[serde(with = "opaque_data::fixed_length")] pub key: [u8; 32],
+    #[serde(with = "opaque_data::fixed_length")]
+    pub key: [u8; 32],
 }
 
 /*
@@ -235,7 +244,8 @@ pub struct HmacSha256Key {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct HmacSha256Mac {
-  #[serde(with = "opaque_data::fixed_length")] pub mac: [u8; 32],
+    #[serde(with = "opaque_data::fixed_length")]
+    pub mac: [u8; 32],
 }
 
 /* ==== Namespace: stellar ==== */
@@ -250,8 +260,8 @@ pub struct HmacSha256Mac {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct DecoratedSignature {
-  pub hint: SignatureHint,
-  pub signature: Signature,
+    pub hint: SignatureHint,
+    pub signature: Signature,
 }
 
 /*
@@ -276,18 +286,18 @@ pub struct DecoratedSignature {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum OperationType {
-  CreateAccount = 0,
-  Payment = 1,
-  PathPayment = 2,
-  ManageOffer = 3,
-  CreatePassiveOffer = 4,
-  SetOptions = 5,
-  ChangeTrust = 6,
-  AllowTrust = 7,
-  AccountMerge = 8,
-  Inflation = 9,
-  ManageData = 10,
-  BumpSequence = 11,
+    CreateAccount = 0,
+    Payment = 1,
+    PathPayment = 2,
+    ManageOffer = 3,
+    CreatePassiveOffer = 4,
+    SetOptions = 5,
+    ChangeTrust = 6,
+    AllowTrust = 7,
+    AccountMerge = 8,
+    Inflation = 9,
+    ManageData = 10,
+    BumpSequence = 11,
 }
 
 /*
@@ -301,8 +311,8 @@ pub enum OperationType {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct CreateAccountOp {
-  pub destination: AccountId,
-  pub starting_balance: Int64,
+    pub destination: AccountId,
+    pub starting_balance: Int64,
 }
 
 /*
@@ -317,9 +327,9 @@ pub struct CreateAccountOp {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct PaymentOp {
-  pub destination: AccountId,
-  pub asset: Asset,
-  pub amount: Int64,
+    pub destination: AccountId,
+    pub asset: Asset,
+    pub amount: Int64,
 }
 
 /*
@@ -331,22 +341,22 @@ pub struct PaymentOp {
          int64 sendMax;   // the maximum amount of sendAsset to
                           // send (excluding fees).
                           // The operation will fail if can't be met
-     
+
          AccountID destination; // recipient of the payment
          Asset destAsset;       // what they end up with
          int64 destAmount;      // amount they end up with
-     
+
          Asset path<5>; // additional hops it must go through to get there
      };
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct PathPaymentOp {
-  pub send_asset: Asset,
-  pub send_max: Int64,
-  pub destination: AccountId,
-  pub dest_asset: Asset,
-  pub dest_amount: Int64,
-  pub path: Vec<Asset>,
+    pub send_asset: Asset,
+    pub send_max: Int64,
+    pub destination: AccountId,
+    pub dest_asset: Asset,
+    pub dest_amount: Int64,
+    pub path: Vec<Asset>,
 }
 
 /*
@@ -358,18 +368,18 @@ pub struct PathPaymentOp {
          Asset buying;
          int64 amount; // amount being sold. if set to 0, delete the offer
          Price price;  // price of thing being sold in terms of what you are buying
-     
+
          // 0=create a new offer, otherwise edit an existing offer
          uint64 offerID;
      };
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ManageOfferOp {
-  pub selling: Asset,
-  pub buying: Asset,
-  pub amount: Int64,
-  pub price: Price,
-  pub offer_id: Uint64,
+    pub selling: Asset,
+    pub buying: Asset,
+    pub amount: Int64,
+    pub price: Price,
+    pub offer_id: Uint64,
 }
 
 /*
@@ -385,10 +395,10 @@ pub struct ManageOfferOp {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct CreatePassiveOfferOp {
-  pub selling: Asset,
-  pub buying: Asset,
-  pub amount: Int64,
-  pub price: Price,
+    pub selling: Asset,
+    pub buying: Asset,
+    pub amount: Int64,
+    pub price: Price,
 }
 
 /*
@@ -397,18 +407,18 @@ pub struct CreatePassiveOfferOp {
      struct SetOptionsOp
      {
          AccountID* inflationDest; // sets the inflation destination
-     
+
          uint32* clearFlags; // which flags to clear
          uint32* setFlags;   // which flags to set
-     
+
          // account threshold manipulation
          uint32* masterWeight; // weight of the master account
          uint32* lowThreshold;
          uint32* medThreshold;
          uint32* highThreshold;
-     
+
          string32* homeDomain; // sets the home domain
-     
+
          // Add, update or remove a signer for the account
          // signer is deleted if the weight is 0
          Signer* signer;
@@ -416,15 +426,15 @@ pub struct CreatePassiveOfferOp {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct SetOptionsOp {
-  pub inflation_dest: Option<AccountId>,
-  pub clear_flags: Option<Uint32>,
-  pub set_flags: Option<Uint32>,
-  pub master_weight: Option<Uint32>,
-  pub low_threshold: Option<Uint32>,
-  pub med_threshold: Option<Uint32>,
-  pub high_threshold: Option<Uint32>,
-  pub home_domain: Option<String32>,
-  pub signer: Option<Signer>,
+    pub inflation_dest: Option<AccountId>,
+    pub clear_flags: Option<Uint32>,
+    pub set_flags: Option<Uint32>,
+    pub master_weight: Option<Uint32>,
+    pub low_threshold: Option<Uint32>,
+    pub med_threshold: Option<Uint32>,
+    pub high_threshold: Option<Uint32>,
+    pub home_domain: Option<String32>,
+    pub signer: Option<Signer>,
 }
 
 /*
@@ -433,15 +443,15 @@ pub struct SetOptionsOp {
      struct ChangeTrustOp
      {
          Asset line;
-     
+
          // if limit is set to 0, deletes the trust line
          int64 limit;
      };
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ChangeTrustOp {
-  pub line: Asset,
-  pub limit: Int64,
+    pub line: Asset,
+    pub limit: Int64,
 }
 
 /*
@@ -452,21 +462,25 @@ pub struct ChangeTrustOp {
          // ASSET_TYPE_NATIVE is not allowed
          case ASSET_TYPE_CREDIT_ALPHANUM4:
              opaque assetCode4[4];
-     
+
          case ASSET_TYPE_CREDIT_ALPHANUM12:
              opaque assetCode12[12];
-     
+
              // add other asset types here in the future
          }
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum AllowTrustOpAsset {
-  #[serde(with = "opaque_data::fixed_length")] AssetCode4([u8; 4]),
-  #[serde(with = "opaque_data::fixed_length")] AssetCode12([u8; 12]),
+    #[serde(with = "opaque_data::fixed_length")]
+    AssetCode4([u8; 4]),
+    #[serde(with = "opaque_data::fixed_length")]
+    AssetCode12([u8; 12]),
 }
 
 impl Default for AllowTrustOpAsset {
-    fn default() -> Self { AllowTrustOpAsset::AssetCode4([0,0,0,0]) }
+    fn default() -> Self {
+        AllowTrustOpAsset::AssetCode4([0, 0, 0, 0])
+    }
 }
 
 /*
@@ -480,22 +494,22 @@ impl Default for AllowTrustOpAsset {
          // ASSET_TYPE_NATIVE is not allowed
          case ASSET_TYPE_CREDIT_ALPHANUM4:
              opaque assetCode4[4];
-     
+
          case ASSET_TYPE_CREDIT_ALPHANUM12:
              opaque assetCode12[12];
-     
+
              // add other asset types here in the future
          }
          asset;
-     
+
          bool authorize;
      };
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AllowTrustOp {
-  pub trustor: AccountId,
-  pub asset: AllowTrustOpAsset,
-  pub authorize: bool,
+    pub trustor: AccountId,
+    pub asset: AllowTrustOpAsset,
+    pub authorize: bool,
 }
 
 /*
@@ -509,8 +523,8 @@ pub struct AllowTrustOp {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ManageDataOp {
-  pub data_name: String64,
-  pub data_value: Option<DataValue>,
+    pub data_name: String64,
+    pub data_value: Option<DataValue>,
 }
 
 /*
@@ -523,7 +537,7 @@ pub struct ManageDataOp {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct BumpSequenceOp {
-  pub bump_to: SequenceNumber,
+    pub bump_to: SequenceNumber,
 }
 
 /*
@@ -559,22 +573,24 @@ pub struct BumpSequenceOp {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum OperationBody {
-  CreateAccountOp(CreateAccountOp),
-  PaymentOp(PaymentOp),
-  PathPaymentOp(PathPaymentOp),
-  ManageOfferOp(ManageOfferOp),
-  CreatePassiveOfferOp(CreatePassiveOfferOp),
-  SetOptionsOp(SetOptionsOp),
-  ChangeTrustOp(ChangeTrustOp),
-  AllowTrustOp(AllowTrustOp),
-  Destination(AccountId),
-  Void,
-  ManageDataOp(ManageDataOp),
-  BumpSequenceOp(BumpSequenceOp),
+    CreateAccountOp(CreateAccountOp),
+    PaymentOp(PaymentOp),
+    PathPaymentOp(PathPaymentOp),
+    ManageOfferOp(ManageOfferOp),
+    CreatePassiveOfferOp(CreatePassiveOfferOp),
+    SetOptionsOp(SetOptionsOp),
+    ChangeTrustOp(ChangeTrustOp),
+    AllowTrustOp(AllowTrustOp),
+    Destination(AccountId),
+    Void,
+    ManageDataOp(ManageDataOp),
+    BumpSequenceOp(BumpSequenceOp),
 }
 
 impl Default for OperationBody {
-  fn default() -> Self { OperationBody::Void }
+    fn default() -> Self {
+        OperationBody::Void
+    }
 }
 
 /*
@@ -586,7 +602,7 @@ impl Default for OperationBody {
          // if not set, the runtime defaults to "sourceAccount" specified at
          // the transaction level
          AccountID* sourceAccount;
-     
+
          union switch (OperationType type)
          {
          case CREATE_ACCOUNT:
@@ -619,8 +635,8 @@ impl Default for OperationBody {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Operation {
-  pub source_account: Option<AccountId>,
-  pub body: OperationBody,
+    pub source_account: Option<AccountId>,
+    pub body: OperationBody,
 }
 
 /*
@@ -638,11 +654,11 @@ pub struct Operation {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum MemoType {
-  MemoNone = 0,
-  MemoText = 1,
-  MemoId = 2,
-  MemoHash = 3,
-  MemoReturn = 4,
+    MemoNone = 0,
+    MemoText = 1,
+    MemoId = 2,
+    MemoHash = 3,
+    MemoReturn = 4,
 }
 
 /*
@@ -664,15 +680,17 @@ pub enum MemoType {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum Memo {
-  Void,
-  Text(String),
-  Id(Uint64),
-  Hash(Hash),
-  RetHash(Hash),
+    Void,
+    Text(String),
+    Id(Uint64),
+    Hash(Hash),
+    RetHash(Hash),
 }
 
 impl Default for Memo {
-  fn default() -> Self { Memo::Void }
+    fn default() -> Self {
+        Memo::Void
+    }
 }
 
 /*
@@ -686,8 +704,8 @@ impl Default for Memo {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TimeBounds {
-  pub min_time: TimePoint,
-  pub max_time: TimePoint,
+    pub min_time: TimePoint,
+    pub max_time: TimePoint,
 }
 
 /*
@@ -701,11 +719,13 @@ pub struct TimeBounds {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionExt {
-  Void,
+    Void,
 }
 
 impl Default for TransactionExt {
-  fn default() -> Self { TransactionExt::Void }
+    fn default() -> Self {
+        TransactionExt::Void
+    }
 }
 
 /*
@@ -715,20 +735,20 @@ impl Default for TransactionExt {
      {
          // account used to run the transaction
          AccountID sourceAccount;
-     
+
          // the fee the sourceAccount will pay
          uint32 fee;
-     
+
          // sequence number to consume in the account
          SequenceNumber seqNum;
-     
+
          // validity range (inclusive) for the last ledger close time
          TimeBounds* timeBounds;
-     
+
          Memo memo;
-     
+
          Operation operations<100>;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -740,70 +760,72 @@ impl Default for TransactionExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Transaction {
-  pub source_account: AccountId,
-  pub fee: Uint32,
-  pub seq_num: SequenceNumber,
-  pub time_bounds: Option<TimeBounds>,
-  pub memo: Memo,
-  pub operations: Vec<Operation>,
-  pub ext: TransactionExt,
+    pub source_account: AccountId,
+    pub fee: Uint32,
+    pub seq_num: SequenceNumber,
+    pub time_bounds: Option<TimeBounds>,
+    pub memo: Memo,
+    pub operations: Vec<Operation>,
+    pub ext: TransactionExt,
 }
 
 /*
-   TransactionSignaturePayloadTaggedTransaction is an XDR NestedUnion defined as:
+TransactionSignaturePayloadTaggedTransaction is an XDR NestedUnion defined as:
 
-     union switch (EnvelopeType type)
-         {
-         case ENVELOPE_TYPE_TX:
-             Transaction tx;
-             /* All other values of type are invalid */
-         }
+  union switch (EnvelopeType type)
+      {
+      case ENVELOPE_TYPE_TX:
+          Transaction tx;
+          /* All other values of type are invalid */
+}
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionSignaturePayloadTaggedTransaction {
-  Tx(Transaction),
+    Tx(Transaction),
 }
 
 impl Default for TransactionSignaturePayloadTaggedTransaction {
-  fn default() -> Self { TransactionSignaturePayloadTaggedTransaction::Tx(Transaction::default()) }
+    fn default() -> Self {
+        TransactionSignaturePayloadTaggedTransaction::Tx(Transaction::default())
+    }
 }
 
 /*
-   TransactionSignaturePayload is an XDR Struct defined as:
+TransactionSignaturePayload is an XDR Struct defined as:
 
-     struct TransactionSignaturePayload
-     {
-         Hash networkId;
-         union switch (EnvelopeType type)
-         {
-         case ENVELOPE_TYPE_TX:
-             Transaction tx;
-             /* All other values of type are invalid */
-         }
-         taggedTransaction;
-     };
+  struct TransactionSignaturePayload
+  {
+      Hash networkId;
+      union switch (EnvelopeType type)
+      {
+      case ENVELOPE_TYPE_TX:
+          Transaction tx;
+          /* All other values of type are invalid */
+}
+taggedTransaction;
+};
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionSignaturePayload {
-  pub network_id: Hash,
-  pub tagged_transaction: TransactionSignaturePayloadTaggedTransaction,
+    pub network_id: Hash,
+    pub tagged_transaction: TransactionSignaturePayloadTaggedTransaction,
 }
 
 /*
-   TransactionEnvelope is an XDR Struct defined as:
+TransactionEnvelope is an XDR Struct defined as:
 
-     struct TransactionEnvelope
-     {
-         Transaction tx;
-         /* Each decorated signature is a signature over the SHA256 hash of
-          * a TransactionSignaturePayload */
-         DecoratedSignature signatures<20>;
-     };
+  struct TransactionEnvelope
+  {
+      Transaction tx;
+      /* Each decorated signature is a signature over the SHA256 hash of
+       * a TransactionSignaturePayload */
+DecoratedSignature signatures<20>;
+};
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionEnvelope {
-  pub tx: Transaction,
-  pub signatures: Vec<DecoratedSignature>,
+    pub tx: Transaction,
+    pub signatures: Vec<DecoratedSignature>,
 }
 
 /*
@@ -814,11 +836,11 @@ pub struct TransactionEnvelope {
          // emitted to identify the offer
          AccountID sellerID; // Account that owns the offer
          uint64 offerID;
-     
+
          // amount and asset taken from the owner
          Asset assetSold;
          int64 amountSold;
-     
+
          // amount and asset sent to the owner
          Asset assetBought;
          int64 amountBought;
@@ -826,12 +848,12 @@ pub struct TransactionEnvelope {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ClaimOfferAtom {
-  pub seller_id: AccountId,
-  pub offer_id: Uint64,
-  pub asset_sold: Asset,
-  pub amount_sold: Int64,
-  pub asset_bought: Asset,
-  pub amount_bought: Int64,
+    pub seller_id: AccountId,
+    pub offer_id: Uint64,
+    pub asset_sold: Asset,
+    pub amount_sold: Int64,
+    pub asset_bought: Asset,
+    pub amount_bought: Int64,
 }
 
 /*
@@ -841,7 +863,7 @@ pub struct ClaimOfferAtom {
      {
          // codes considered as "success" for the operation
          CREATE_ACCOUNT_SUCCESS = 0, // account was created
-     
+
          // codes considered as "failure" for the operation
          CREATE_ACCOUNT_MALFORMED = -1,   // invalid destination
          CREATE_ACCOUNT_UNDERFUNDED = -2, // not enough funds in source account
@@ -853,11 +875,11 @@ pub struct ClaimOfferAtom {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum CreateAccountResultCode {
-  CreateAccountSuccess = 0,
-  CreateAccountMalformed = -1,
-  CreateAccountUnderfunded = -2,
-  CreateAccountLowReserve = -3,
-  CreateAccountAlreadyExist = -4,
+    CreateAccountSuccess = 0,
+    CreateAccountMalformed = -1,
+    CreateAccountUnderfunded = -2,
+    CreateAccountLowReserve = -3,
+    CreateAccountAlreadyExist = -4,
 }
 
 /*
@@ -873,12 +895,14 @@ pub enum CreateAccountResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum CreateAccountResult {
-  Void,
-  Void1,
+    Void,
+    Void1,
 }
 
 impl Default for CreateAccountResult {
-  fn default() -> Self { CreateAccountResult::Void }
+    fn default() -> Self {
+        CreateAccountResult::Void
+    }
 }
 
 /*
@@ -888,7 +912,7 @@ impl Default for CreateAccountResult {
      {
          // codes considered as "success" for the operation
          PAYMENT_SUCCESS = 0, // payment successfuly completed
-     
+
          // codes considered as "failure" for the operation
          PAYMENT_MALFORMED = -1,          // bad input
          PAYMENT_UNDERFUNDED = -2,        // not enough funds in source account
@@ -904,16 +928,16 @@ impl Default for CreateAccountResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum PaymentResultCode {
-  PaymentSuccess = 0,
-  PaymentMalformed = -1,
-  PaymentUnderfunded = -2,
-  PaymentSrcNoTrust = -3,
-  PaymentSrcNotAuthorized = -4,
-  PaymentNoDestination = -5,
-  PaymentNoTrust = -6,
-  PaymentNotAuthorized = -7,
-  PaymentLineFull = -8,
-  PaymentNoIssuer = -9,
+    PaymentSuccess = 0,
+    PaymentMalformed = -1,
+    PaymentUnderfunded = -2,
+    PaymentSrcNoTrust = -3,
+    PaymentSrcNotAuthorized = -4,
+    PaymentNoDestination = -5,
+    PaymentNoTrust = -6,
+    PaymentNotAuthorized = -7,
+    PaymentLineFull = -8,
+    PaymentNoIssuer = -9,
 }
 
 /*
@@ -929,8 +953,8 @@ pub enum PaymentResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum PaymentResult {
-  Void,
-  Void1,
+    Void,
+    Void1,
 }
 
 /*
@@ -940,7 +964,7 @@ pub enum PaymentResult {
      {
          // codes considered as "success" for the operation
          PATH_PAYMENT_SUCCESS = 0, // success
-     
+
          // codes considered as "failure" for the operation
          PATH_PAYMENT_MALFORMED = -1,          // bad input
          PATH_PAYMENT_UNDERFUNDED = -2,        // not enough funds in source account
@@ -959,19 +983,19 @@ pub enum PaymentResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum PathPaymentResultCode {
-  PathPaymentSuccess = 0,
-  PathPaymentMalformed = -1,
-  PathPaymentUnderfunded = -2,
-  PathPaymentSrcNoTrust = -3,
-  PathPaymentSrcNotAuthorized = -4,
-  PathPaymentNoDestination = -5,
-  PathPaymentNoTrust = -6,
-  PathPaymentNotAuthorized = -7,
-  PathPaymentLineFull = -8,
-  PathPaymentNoIssuer = -9,
-  PathPaymentTooFewOffers = -10,
-  PathPaymentOfferCrossSelf = -11,
-  PathPaymentOverSendmax = -12,
+    PathPaymentSuccess = 0,
+    PathPaymentMalformed = -1,
+    PathPaymentUnderfunded = -2,
+    PathPaymentSrcNoTrust = -3,
+    PathPaymentSrcNotAuthorized = -4,
+    PathPaymentNoDestination = -5,
+    PathPaymentNoTrust = -6,
+    PathPaymentNotAuthorized = -7,
+    PathPaymentLineFull = -8,
+    PathPaymentNoIssuer = -9,
+    PathPaymentTooFewOffers = -10,
+    PathPaymentOfferCrossSelf = -11,
+    PathPaymentOverSendmax = -12,
 }
 
 /*
@@ -986,9 +1010,9 @@ pub enum PathPaymentResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct SimplePaymentResult {
-  pub destination: AccountId,
-  pub asset: Asset,
-  pub amount: Int64,
+    pub destination: AccountId,
+    pub asset: Asset,
+    pub amount: Int64,
 }
 
 /*
@@ -1002,8 +1026,8 @@ pub struct SimplePaymentResult {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct PathPaymentResultSuccess {
-  pub offers: Vec<ClaimOfferAtom>,
-  pub last: SimplePaymentResult,
+    pub offers: Vec<ClaimOfferAtom>,
+    pub last: SimplePaymentResult,
 }
 
 /*
@@ -1025,9 +1049,9 @@ pub struct PathPaymentResultSuccess {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum PathPaymentResult {
-  Success(PathPaymentResultSuccess),
-  NoIssuer(Asset),
-  Void,
+    Success(PathPaymentResultSuccess),
+    NoIssuer(Asset),
+    Void,
 }
 
 /*
@@ -1037,7 +1061,7 @@ pub enum PathPaymentResult {
      {
          // codes considered as "success" for the operation
          MANAGE_OFFER_SUCCESS = 0,
-     
+
          // codes considered as "failure" for the operation
          MANAGE_OFFER_MALFORMED = -1,     // generated offer would be invalid
          MANAGE_OFFER_SELL_NO_TRUST = -2, // no trust line for what we're selling
@@ -1049,29 +1073,29 @@ pub enum PathPaymentResult {
          MANAGE_OFFER_CROSS_SELF = -8,     // would cross an offer from the same user
          MANAGE_OFFER_SELL_NO_ISSUER = -9, // no issuer for what we're selling
          MANAGE_OFFER_BUY_NO_ISSUER = -10, // no issuer for what we're buying
-     
+
          // update errors
          MANAGE_OFFER_NOT_FOUND = -11, // offerID does not match an existing offer
-     
+
          MANAGE_OFFER_LOW_RESERVE = -12 // not enough funds to create a new Offer
      };
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum ManageOfferResultCode {
-  ManageOfferSuccess = 0,
-  ManageOfferMalformed = -1,
-  ManageOfferSellNoTrust = -2,
-  ManageOfferBuyNoTrust = -3,
-  ManageOfferSellNotAuthorized = -4,
-  ManageOfferBuyNotAuthorized = -5,
-  ManageOfferLineFull = -6,
-  ManageOfferUnderfunded = -7,
-  ManageOfferCrossSelf = -8,
-  ManageOfferSellNoIssuer = -9,
-  ManageOfferBuyNoIssuer = -10,
-  ManageOfferNotFound = -11,
-  ManageOfferLowReserve = -12,
+    ManageOfferSuccess = 0,
+    ManageOfferMalformed = -1,
+    ManageOfferSellNoTrust = -2,
+    ManageOfferBuyNoTrust = -3,
+    ManageOfferSellNotAuthorized = -4,
+    ManageOfferBuyNotAuthorized = -5,
+    ManageOfferLineFull = -6,
+    ManageOfferUnderfunded = -7,
+    ManageOfferCrossSelf = -8,
+    ManageOfferSellNoIssuer = -9,
+    ManageOfferBuyNoIssuer = -10,
+    ManageOfferNotFound = -11,
+    ManageOfferLowReserve = -12,
 }
 
 /*
@@ -1087,9 +1111,9 @@ pub enum ManageOfferResultCode {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum ManageOfferEffect {
-  ManageOfferCreated = 0,
-  ManageOfferUpdated = 1,
-  ManageOfferDeleted = 2,
+    ManageOfferCreated = 0,
+    ManageOfferUpdated = 1,
+    ManageOfferDeleted = 2,
 }
 
 /*
@@ -1106,12 +1130,14 @@ pub enum ManageOfferEffect {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ManageOfferSuccessResultOffer {
-  Offer(OfferEntry),
-  Void,
+    Offer(OfferEntry),
+    Void,
 }
 
 impl Default for ManageOfferSuccessResultOffer {
-  fn default() -> Self { ManageOfferSuccessResultOffer::Void }
+    fn default() -> Self {
+        ManageOfferSuccessResultOffer::Void
+    }
 }
 
 /*
@@ -1121,7 +1147,7 @@ impl Default for ManageOfferSuccessResultOffer {
      {
          // offers that got claimed while creating this offer
          ClaimOfferAtom offersClaimed<>;
-     
+
          union switch (ManageOfferEffect effect)
          {
          case MANAGE_OFFER_CREATED:
@@ -1135,8 +1161,8 @@ impl Default for ManageOfferSuccessResultOffer {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ManageOfferSuccessResult {
-  pub offers_claimed: Vec<ClaimOfferAtom>,
-  pub offer: ManageOfferSuccessResultOffer,
+    pub offers_claimed: Vec<ClaimOfferAtom>,
+    pub offer: ManageOfferSuccessResultOffer,
 }
 
 /*
@@ -1152,8 +1178,8 @@ pub struct ManageOfferSuccessResult {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ManageOfferResult {
-  Success(ManageOfferSuccessResult),
-  Void,
+    Success(ManageOfferSuccessResult),
+    Void,
 }
 
 /*
@@ -1178,16 +1204,16 @@ pub enum ManageOfferResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum SetOptionsResultCode {
-  SetOptionsSuccess = 0,
-  SetOptionsLowReserve = -1,
-  SetOptionsTooManySigners = -2,
-  SetOptionsBadFlags = -3,
-  SetOptionsInvalidInflation = -4,
-  SetOptionsCantChange = -5,
-  SetOptionsUnknownFlag = -6,
-  SetOptionsThresholdOutOfRange = -7,
-  SetOptionsBadSigner = -8,
-  SetOptionsInvalidHomeDomain = -9,
+    SetOptionsSuccess = 0,
+    SetOptionsLowReserve = -1,
+    SetOptionsTooManySigners = -2,
+    SetOptionsBadFlags = -3,
+    SetOptionsInvalidInflation = -4,
+    SetOptionsCantChange = -5,
+    SetOptionsUnknownFlag = -6,
+    SetOptionsThresholdOutOfRange = -7,
+    SetOptionsBadSigner = -8,
+    SetOptionsInvalidHomeDomain = -9,
 }
 
 /*
@@ -1203,8 +1229,8 @@ pub enum SetOptionsResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum SetOptionsResult {
-  Void,
-  Void1,
+    Void,
+    Void1,
 }
 
 /*
@@ -1227,12 +1253,12 @@ pub enum SetOptionsResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum ChangeTrustResultCode {
-  ChangeTrustSuccess = 0,
-  ChangeTrustMalformed = -1,
-  ChangeTrustNoIssuer = -2,
-  ChangeTrustInvalidLimit = -3,
-  ChangeTrustLowReserve = -4,
-  ChangeTrustSelfNotAllowed = -5,
+    ChangeTrustSuccess = 0,
+    ChangeTrustMalformed = -1,
+    ChangeTrustNoIssuer = -2,
+    ChangeTrustInvalidLimit = -3,
+    ChangeTrustLowReserve = -4,
+    ChangeTrustSelfNotAllowed = -5,
 }
 
 /*
@@ -1248,8 +1274,8 @@ pub enum ChangeTrustResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ChangeTrustResult {
-  Void,
-  Void1,
+    Void,
+    Void1,
 }
 
 /*
@@ -1271,12 +1297,12 @@ pub enum ChangeTrustResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum AllowTrustResultCode {
-  AllowTrustSuccess = 0,
-  AllowTrustMalformed = -1,
-  AllowTrustNoTrustLine = -2,
-  AllowTrustTrustNotRequired = -3,
-  AllowTrustCantRevoke = -4,
-  AllowTrustSelfNotAllowed = -5,
+    AllowTrustSuccess = 0,
+    AllowTrustMalformed = -1,
+    AllowTrustNoTrustLine = -2,
+    AllowTrustTrustNotRequired = -3,
+    AllowTrustCantRevoke = -4,
+    AllowTrustSelfNotAllowed = -5,
 }
 
 /*
@@ -1292,8 +1318,8 @@ pub enum AllowTrustResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum AllowTrustResult {
-  Void,
-  Void1,
+    Void,
+    Void1,
 }
 
 /*
@@ -1316,13 +1342,13 @@ pub enum AllowTrustResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum AccountMergeResultCode {
-  AccountMergeSuccess = 0,
-  AccountMergeMalformed = -1,
-  AccountMergeNoAccount = -2,
-  AccountMergeImmutableSet = -3,
-  AccountMergeHasSubEntries = -4,
-  AccountMergeSeqnumTooFar = -5,
-  AccountMergeDestFull = -6,
+    AccountMergeSuccess = 0,
+    AccountMergeMalformed = -1,
+    AccountMergeNoAccount = -2,
+    AccountMergeImmutableSet = -3,
+    AccountMergeHasSubEntries = -4,
+    AccountMergeSeqnumTooFar = -5,
+    AccountMergeDestFull = -6,
 }
 
 /*
@@ -1338,12 +1364,14 @@ pub enum AccountMergeResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum AccountMergeResult {
-  SourceAccountBalance(Int64),
-  Void,
+    SourceAccountBalance(Int64),
+    Void,
 }
 
 impl Default for AccountMergeResult {
-  fn default() -> Self { AccountMergeResult::Void }
+    fn default() -> Self {
+        AccountMergeResult::Void
+    }
 }
 
 /*
@@ -1360,8 +1388,8 @@ impl Default for AccountMergeResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum InflationResultCode {
-  InflationSuccess = 0,
-  InflationNotTime = -1,
+    InflationSuccess = 0,
+    InflationNotTime = -1,
 }
 
 /*
@@ -1375,8 +1403,8 @@ pub enum InflationResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct InflationPayout {
-  pub destination: AccountId,
-  pub amount: Int64,
+    pub destination: AccountId,
+    pub amount: Int64,
 }
 
 /*
@@ -1392,12 +1420,14 @@ pub struct InflationPayout {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum InflationResult {
-  Payouts(Vec<InflationPayout>),
-  Void,
+    Payouts(Vec<InflationPayout>),
+    Void,
 }
 
 impl Default for InflationResult {
-  fn default() -> Self { InflationResult::Void }
+    fn default() -> Self {
+        InflationResult::Void
+    }
 }
 
 /*
@@ -1419,15 +1449,17 @@ impl Default for InflationResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum ManageDataResultCode {
-  ManageDataSuccess = 0,
-  ManageDataNotSupportedYet = -1,
-  ManageDataNameNotFound = -2,
-  ManageDataLowReserve = -3,
-  ManageDataInvalidName = -4,
+    ManageDataSuccess = 0,
+    ManageDataNotSupportedYet = -1,
+    ManageDataNameNotFound = -2,
+    ManageDataLowReserve = -3,
+    ManageDataInvalidName = -4,
 }
 
 impl Default for ManageDataResultCode {
-  fn default() -> Self { ManageDataResultCode::ManageDataSuccess }
+    fn default() -> Self {
+        ManageDataResultCode::ManageDataSuccess
+    }
 }
 
 /*
@@ -1443,12 +1475,14 @@ impl Default for ManageDataResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ManageDataResult {
-  Void,
-  Void1,
+    Void,
+    Void1,
 }
 
 impl Default for ManageDataResult {
-  fn default() -> Self { ManageDataResult::Void }
+    fn default() -> Self {
+        ManageDataResult::Void
+    }
 }
 
 /*
@@ -1465,12 +1499,14 @@ impl Default for ManageDataResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum BumpSequenceResultCode {
-  BumpSequenceSuccess = 0,
-  BumpSequenceBadSeq = -1,
+    BumpSequenceSuccess = 0,
+    BumpSequenceBadSeq = -1,
 }
 
 impl Default for BumpSequenceResultCode {
-  fn default() -> Self { BumpSequenceResultCode::BumpSequenceSuccess }
+    fn default() -> Self {
+        BumpSequenceResultCode::BumpSequenceSuccess
+    }
 }
 
 /*
@@ -1486,8 +1522,8 @@ impl Default for BumpSequenceResultCode {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum BumpSequenceResult {
-  Void,
-  Void1,
+    Void,
+    Void1,
 }
 
 /*
@@ -1496,7 +1532,7 @@ pub enum BumpSequenceResult {
      enum OperationResultCode
      {
          opINNER = 0, // inner object result is valid
-     
+
          opBAD_AUTH = -1,     // too few valid signatures / wrong network
          opNO_ACCOUNT = -2,   // source account was not found
          opNOT_SUPPORTED = -3 // operation not supported at this time
@@ -1505,14 +1541,16 @@ pub enum BumpSequenceResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum OperationResultCode {
-  OpInner = 0,
-  OpBadAuth = -1,
-  OpNoAccount = -2,
-  OpNotSupported = -3,
+    OpInner = 0,
+    OpBadAuth = -1,
+    OpNoAccount = -2,
+    OpNotSupported = -3,
 }
 
 impl Default for OperationResultCode {
-  fn default() -> Self { OperationResultCode::OpInner }
+    fn default() -> Self {
+        OperationResultCode::OpInner
+    }
 }
 
 /*
@@ -1548,22 +1586,24 @@ impl Default for OperationResultCode {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum OperationResultTr {
-  CreateAccountResult(CreateAccountResult),
-  PaymentResult(PaymentResult),
-  PathPaymentResult(PathPaymentResult),
-  ManageOfferResult(ManageOfferResult),
-  CreatePassiveOfferResult(ManageOfferResult),
-  SetOptionsResult(SetOptionsResult),
-  ChangeTrustResult(ChangeTrustResult),
-  AllowTrustResult(AllowTrustResult),
-  AccountMergeResult(AccountMergeResult),
-  InflationResult(InflationResult),
-  ManageDataResult(ManageDataResult),
-  BumpSeqResult(BumpSequenceResult),
+    CreateAccountResult(CreateAccountResult),
+    PaymentResult(PaymentResult),
+    PathPaymentResult(PathPaymentResult),
+    ManageOfferResult(ManageOfferResult),
+    CreatePassiveOfferResult(ManageOfferResult),
+    SetOptionsResult(SetOptionsResult),
+    ChangeTrustResult(ChangeTrustResult),
+    AllowTrustResult(AllowTrustResult),
+    AccountMergeResult(AccountMergeResult),
+    InflationResult(InflationResult),
+    ManageDataResult(ManageDataResult),
+    BumpSeqResult(BumpSequenceResult),
 }
 
 impl Default for OperationResultTr {
-  fn default() -> Self { OperationResultTr::CreateAccountResult(CreateAccountResult::default()) }
+    fn default() -> Self {
+        OperationResultTr::CreateAccountResult(CreateAccountResult::default())
+    }
 }
 
 /*
@@ -1606,12 +1646,14 @@ impl Default for OperationResultTr {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum OperationResult {
-  Tr(OperationResultTr),
-  Void,
+    Tr(OperationResultTr),
+    Void,
 }
 
 impl Default for OperationResult {
-  fn default() -> Self { OperationResult::Void }
+    fn default() -> Self {
+        OperationResult::Void
+    }
 }
 
 /*
@@ -1620,14 +1662,14 @@ impl Default for OperationResult {
      enum TransactionResultCode
      {
          txSUCCESS = 0, // all operations succeeded
-     
+
          txFAILED = -1, // one of the operations failed (none were applied)
-     
+
          txTOO_EARLY = -2,         // ledger closeTime before minTime
          txTOO_LATE = -3,          // ledger closeTime after maxTime
          txMISSING_OPERATION = -4, // no operation was specified
          txBAD_SEQ = -5,           // sequence number does not match source account
-     
+
          txBAD_AUTH = -6,             // too few valid signatures / wrong network
          txINSUFFICIENT_BALANCE = -7, // fee would bring account below reserve
          txNO_ACCOUNT = -8,           // source account not found
@@ -1639,22 +1681,24 @@ impl Default for OperationResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum TransactionResultCode {
-  TxSuccess = 0,
-  TxFailed = -1,
-  TxTooEarly = -2,
-  TxTooLate = -3,
-  TxMissingOperation = -4,
-  TxBadSeq = -5,
-  TxBadAuth = -6,
-  TxInsufficientBalance = -7,
-  TxNoAccount = -8,
-  TxInsufficientFee = -9,
-  TxBadAuthExtra = -10,
-  TxInternalError = -11,
+    TxSuccess = 0,
+    TxFailed = -1,
+    TxTooEarly = -2,
+    TxTooLate = -3,
+    TxMissingOperation = -4,
+    TxBadSeq = -5,
+    TxBadAuth = -6,
+    TxInsufficientBalance = -7,
+    TxNoAccount = -8,
+    TxInsufficientFee = -9,
+    TxBadAuthExtra = -10,
+    TxInternalError = -11,
 }
 
 impl Default for TransactionResultCode {
-  fn default() -> Self { TransactionResultCode::TxSuccess }
+    fn default() -> Self {
+        TransactionResultCode::TxSuccess
+    }
 }
 
 /*
@@ -1671,12 +1715,14 @@ impl Default for TransactionResultCode {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionResultResult {
-  Results(Vec<OperationResult>),
-  Void,
+    Results(Vec<OperationResult>),
+    Void,
 }
 
 impl Default for TransactionResultResult {
-  fn default() -> Self { TransactionResultResult::Void }
+    fn default() -> Self {
+        TransactionResultResult::Void
+    }
 }
 
 /*
@@ -1690,11 +1736,13 @@ impl Default for TransactionResultResult {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionResultExt {
-  Void,
+    Void,
 }
 
 impl Default for TransactionResultExt {
-  fn default() -> Self { TransactionResultExt::Void }
+    fn default() -> Self {
+        TransactionResultExt::Void
+    }
 }
 
 /*
@@ -1703,7 +1751,7 @@ impl Default for TransactionResultExt {
      struct TransactionResult
      {
          int64 feeCharged; // actual fee charged for the transaction
-     
+
          union switch (TransactionResultCode code)
          {
          case txSUCCESS:
@@ -1713,7 +1761,7 @@ impl Default for TransactionResultExt {
              void;
          }
          result;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -1725,9 +1773,9 @@ impl Default for TransactionResultExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionResult {
-  pub fee_charged: Int64,
-  pub result: TransactionResultResult,
-  pub ext: TransactionResultExt,
+    pub fee_charged: Int64,
+    pub result: TransactionResultResult,
+    pub ext: TransactionResultExt,
 }
 
 /* ==== Namespace: stellar ==== */
@@ -1746,15 +1794,17 @@ pub struct TransactionResult {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum ErrorCode {
-  ErrMisc = 0,
-  ErrData = 1,
-  ErrConf = 2,
-  ErrAuth = 3,
-  ErrLoad = 4,
+    ErrMisc = 0,
+    ErrData = 1,
+    ErrConf = 2,
+    ErrAuth = 3,
+    ErrLoad = 4,
 }
 
 impl Default for ErrorCode {
-  fn default() -> Self { ErrorCode::ErrMisc }
+    fn default() -> Self {
+        ErrorCode::ErrMisc
+    }
 }
 
 /*
@@ -1768,8 +1818,8 @@ impl Default for ErrorCode {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Error {
-  pub code: ErrorCode,
-  pub msg: String,
+    pub code: ErrorCode,
+    pub msg: String,
 }
 
 /*
@@ -1784,9 +1834,9 @@ pub struct Error {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AuthCert {
-  pub pubkey: Curve25519Public,
-  pub expiration: Uint64,
-  pub sig: Signature,
+    pub pubkey: Curve25519Public,
+    pub expiration: Uint64,
+    pub sig: Signature,
 }
 
 /*
@@ -1807,15 +1857,15 @@ pub struct AuthCert {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Hello {
-  pub ledger_version: Uint32,
-  pub overlay_version: Uint32,
-  pub overlay_min_version: Uint32,
-  pub network_id: Hash,
-  pub version_str: String,
-  pub listening_port: i32,
-  pub peer_id: NodeId,
-  pub cert: AuthCert,
-  pub nonce: Uint256,
+    pub ledger_version: Uint32,
+    pub overlay_version: Uint32,
+    pub overlay_min_version: Uint32,
+    pub network_id: Hash,
+    pub version_str: String,
+    pub listening_port: i32,
+    pub peer_id: NodeId,
+    pub cert: AuthCert,
+    pub nonce: Uint256,
 }
 
 /*
@@ -1830,7 +1880,7 @@ pub struct Hello {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Auth {
-  pub unused: i32,
+    pub unused: i32,
 }
 
 /*
@@ -1845,12 +1895,14 @@ pub struct Auth {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum IpAddrType {
-  IPv4 = 0,
-  IPv6 = 1,
+    IPv4 = 0,
+    IPv6 = 1,
 }
 
 impl Default for IpAddrType {
-  fn default() -> Self { IpAddrType::IPv4 }
+    fn default() -> Self {
+        IpAddrType::IPv4
+    }
 }
 
 /*
@@ -1866,12 +1918,16 @@ impl Default for IpAddrType {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum PeerAddressIp {
-  #[serde(with = "opaque_data::fixed_length")] Ipv4([u8; 4]),
-  #[serde(with = "opaque_data::fixed_length")] Ipv6([u8; 16]),
+    #[serde(with = "opaque_data::fixed_length")]
+    Ipv4([u8; 4]),
+    #[serde(with = "opaque_data::fixed_length")]
+    Ipv6([u8; 16]),
 }
 
 impl Default for PeerAddressIp {
-  fn default() -> Self { PeerAddressIp::Ipv4([0,0,0,0]) }
+    fn default() -> Self {
+        PeerAddressIp::Ipv4([0, 0, 0, 0])
+    }
 }
 
 /*
@@ -1893,9 +1949,9 @@ impl Default for PeerAddressIp {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct PeerAddress {
-  pub ip: PeerAddressIp,
-  pub port: Uint32,
-  pub num_failures: Uint32,
+    pub ip: PeerAddressIp,
+    pub port: Uint32,
+    pub num_failures: Uint32,
 }
 
 /*
@@ -1906,21 +1962,21 @@ pub struct PeerAddress {
          ERROR_MSG = 0,
          AUTH = 2,
          DONT_HAVE = 3,
-     
+
          GET_PEERS = 4, // gets a list of peers this guy knows about
          PEERS = 5,
-     
+
          GET_TX_SET = 6, // gets a particular txset by hash
          TX_SET = 7,
-     
+
          TRANSACTION = 8, // pass on a tx you have heard about
-     
+
          // SCP
          GET_SCP_QUORUMSET = 9,
          SCP_QUORUMSET = 10,
          SCP_MESSAGE = 11,
          GET_SCP_STATE = 12,
-     
+
          // new messages
          HELLO = 13
      };
@@ -1928,23 +1984,25 @@ pub struct PeerAddress {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum MessageType {
-  ErrorMsg = 0,
-  Auth = 2,
-  DontHave = 3,
-  GetPeers = 4,
-  Peers = 5,
-  GetTxSet = 6,
-  TxSet = 7,
-  Transaction = 8,
-  GetScpQuorumset = 9,
-  ScpQuorumset = 10,
-  ScpMessage = 11,
-  GetScpState = 12,
-  Hello = 13,
+    ErrorMsg = 0,
+    Auth = 2,
+    DontHave = 3,
+    GetPeers = 4,
+    Peers = 5,
+    GetTxSet = 6,
+    TxSet = 7,
+    Transaction = 8,
+    GetScpQuorumset = 9,
+    ScpQuorumset = 10,
+    ScpMessage = 11,
+    GetScpState = 12,
+    Hello = 13,
 }
 
 impl Default for MessageType {
-  fn default() -> Self { MessageType::ErrorMsg }
+    fn default() -> Self {
+        MessageType::ErrorMsg
+    }
 }
 
 /*
@@ -1958,8 +2016,8 @@ impl Default for MessageType {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct DontHave {
-  pub type_: MessageType,
-  pub req_hash: Uint256,
+    pub type_: MessageType,
+    pub req_hash: Uint256,
 }
 
 /*
@@ -1979,15 +2037,15 @@ pub struct DontHave {
          void;
      case PEERS:
          PeerAddress peers<100>;
-     
+
      case GET_TX_SET:
          uint256 txSetHash;
      case TX_SET:
          TransactionSet txSet;
-     
+
      case TRANSACTION:
          TransactionEnvelope transaction;
-     
+
      // SCP
      case GET_SCP_QUORUMSET:
          uint256 qSetHash;
@@ -2001,24 +2059,26 @@ pub struct DontHave {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum StellarMessage {
-  Error(Error),
-  Void,
-  Auth(Auth),
-  DontHave(DontHave),
-  GetPeers,
-  Peers(Vec<PeerAddress>),
-  TxSetHash(Uint256),
-  TxSet(TransactionSet),
-  Transaction(TransactionEnvelope),
-  QSetHash(Uint256),
-  QSet(ScpQuorumSet),
-  Envelope(ScpEnvelope),
-  GetScpLedgerSeq(Uint32),
-  Hello(Hello),
+    Error(Error),
+    Void,
+    Auth(Auth),
+    DontHave(DontHave),
+    GetPeers,
+    Peers(Vec<PeerAddress>),
+    TxSetHash(Uint256),
+    TxSet(TransactionSet),
+    Transaction(TransactionEnvelope),
+    QSetHash(Uint256),
+    QSet(ScpQuorumSet),
+    Envelope(ScpEnvelope),
+    GetScpLedgerSeq(Uint32),
+    Hello(Hello),
 }
 
 impl Default for StellarMessage {
-  fn default() -> Self { StellarMessage::Void }
+    fn default() -> Self {
+        StellarMessage::Void
+    }
 }
 
 /*
@@ -2033,9 +2093,9 @@ impl Default for StellarMessage {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AuthenticatedMessageV0 {
-  pub sequence: Uint64,
-  pub message: StellarMessage,
-  pub mac: HmacSha256Mac,
+    pub sequence: Uint64,
+    pub message: StellarMessage,
+    pub mac: HmacSha256Mac,
 }
 
 /*
@@ -2054,11 +2114,13 @@ pub struct AuthenticatedMessageV0 {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum AuthenticatedMessage {
-  V0(AuthenticatedMessageV0),
+    V0(AuthenticatedMessageV0),
 }
 
 impl Default for AuthenticatedMessage {
-  fn default() -> Self { AuthenticatedMessage::V0(AuthenticatedMessageV0::default()) }
+    fn default() -> Self {
+        AuthenticatedMessage::V0(AuthenticatedMessageV0::default())
+    }
 }
 
 /* ==== Namespace: stellar ==== */
@@ -2081,11 +2143,13 @@ pub struct UpgradeType(#[serde(with = "serde_bytes")] pub Vec<u8>);
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum StellarValueExt {
-  Void,
+    Void,
 }
 
 impl Default for StellarValueExt {
-  fn default() -> Self { StellarValueExt::Void }
+    fn default() -> Self {
+        StellarValueExt::Void
+    }
 }
 
 /*
@@ -2095,14 +2159,14 @@ impl Default for StellarValueExt {
      {
          Hash txSetHash;   // transaction set to apply to previous ledger
          TimePoint closeTime; // network close time
-     
+
          // upgrades to apply to the previous ledger (usually empty)
          // this is a vector of encoded 'LedgerUpgrade' so that nodes can drop
          // unknown steps during consensus if needed.
          // see notes below on 'LedgerUpgrade' for more detail
          // max size is dictated by number of upgrade types (+ room for future)
          UpgradeType upgrades<6>;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -2114,10 +2178,10 @@ impl Default for StellarValueExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct StellarValue {
-  pub tx_set_hash: Hash,
-  pub close_time: TimePoint,
-  pub upgrades: Vec<UpgradeType>,
-  pub ext: StellarValueExt,
+    pub tx_set_hash: Hash,
+    pub close_time: TimePoint,
+    pub upgrades: Vec<UpgradeType>,
+    pub ext: StellarValueExt,
 }
 
 /*
@@ -2131,11 +2195,13 @@ pub struct StellarValue {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LedgerHeaderExt {
-  Void,
+    Void,
 }
 
 impl Default for LedgerHeaderExt {
-  fn default() -> Self { LedgerHeaderExt::Void }
+    fn default() -> Self {
+        LedgerHeaderExt::Void
+    }
 }
 
 /*
@@ -2148,28 +2214,28 @@ impl Default for LedgerHeaderExt {
          StellarValue scpValue;   // what consensus agreed to
          Hash txSetResultHash;    // the TransactionResultSet that led to this ledger
          Hash bucketListHash;     // hash of the ledger state
-     
+
          uint32 ledgerSeq; // sequence number of this ledger
-     
+
          int64 totalCoins; // total number of stroops in existence.
                            // 10,000,000 stroops in 1 XLM
-     
+
          int64 feePool;       // fees burned since last inflation run
          uint32 inflationSeq; // inflation sequence number
-     
+
          uint64 idPool; // last used global ID, used for generating objects
-     
+
          uint32 baseFee;     // base fee per operation in stroops
          uint32 baseReserve; // account base reserve in stroops
-     
+
          uint32 maxTxSetSize; // maximum size a transaction set can be
-     
+
          Hash skipList[4]; // hashes of ledgers in the past. allows you to jump back
                            // in time without walking the chain back ledger by ledger
                            // each slot contains the oldest ledger that is mod of
                            // either 50  5000  50000 or 500000 depending on index
                            // skipList[0] mod(50), skipList[1] mod(5000), etc
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -2181,21 +2247,21 @@ impl Default for LedgerHeaderExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerHeader {
-  pub ledger_version: Uint32,
-  pub previous_ledger_hash: Hash,
-  pub scp_value: StellarValue,
-  pub tx_set_result_hash: Hash,
-  pub bucket_list_hash: Hash,
-  pub ledger_seq: Uint32,
-  pub total_coins: Int64,
-  pub fee_pool: Int64,
-  pub inflation_seq: Uint32,
-  pub id_pool: Uint64,
-  pub base_fee: Uint32,
-  pub base_reserve: Uint32,
-  pub max_tx_set_size: Uint32,
-  pub skip_list: [Hash; 4],
-  pub ext: LedgerHeaderExt,
+    pub ledger_version: Uint32,
+    pub previous_ledger_hash: Hash,
+    pub scp_value: StellarValue,
+    pub tx_set_result_hash: Hash,
+    pub bucket_list_hash: Hash,
+    pub ledger_seq: Uint32,
+    pub total_coins: Int64,
+    pub fee_pool: Int64,
+    pub inflation_seq: Uint32,
+    pub id_pool: Uint64,
+    pub base_fee: Uint32,
+    pub base_reserve: Uint32,
+    pub max_tx_set_size: Uint32,
+    pub skip_list: [Hash; 4],
+    pub ext: LedgerHeaderExt,
 }
 
 /*
@@ -2212,10 +2278,10 @@ pub struct LedgerHeader {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum LedgerUpgradeType {
-  LedgerUpgradeVersion = 1,
-  LedgerUpgradeBaseFee = 2,
-  LedgerUpgradeMaxTxSetSize = 3,
-  LedgerUpgradeBaseReserve = 4,
+    LedgerUpgradeVersion = 1,
+    LedgerUpgradeBaseFee = 2,
+    LedgerUpgradeMaxTxSetSize = 3,
+    LedgerUpgradeBaseReserve = 4,
 }
 
 /*
@@ -2235,10 +2301,10 @@ pub enum LedgerUpgradeType {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LedgerUpgrade {
-  NewLedgerVersion(Uint32),
-  NewBaseFee(Uint32),
-  NewMaxTxSetSize(Uint32),
-  NewBaseReserve(Uint32),
+    NewLedgerVersion(Uint32),
+    NewBaseFee(Uint32),
+    NewMaxTxSetSize(Uint32),
+    NewBaseReserve(Uint32),
 }
 
 /*
@@ -2251,7 +2317,7 @@ pub enum LedgerUpgrade {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerKeyAccount {
-  pub account_id: AccountId,
+    pub account_id: AccountId,
 }
 
 /*
@@ -2265,8 +2331,8 @@ pub struct LedgerKeyAccount {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerKeyTrustLine {
-  pub account_id: AccountId,
-  pub asset: Asset,
+    pub account_id: AccountId,
+    pub asset: Asset,
 }
 
 /*
@@ -2280,8 +2346,8 @@ pub struct LedgerKeyTrustLine {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerKeyOffer {
-  pub seller_id: AccountId,
-  pub offer_id: Uint64,
+    pub seller_id: AccountId,
+    pub offer_id: Uint64,
 }
 
 /*
@@ -2295,8 +2361,8 @@ pub struct LedgerKeyOffer {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerKeyData {
-  pub account_id: AccountId,
-  pub data_name: String64,
+    pub account_id: AccountId,
+    pub data_name: String64,
 }
 
 /*
@@ -2309,21 +2375,21 @@ pub struct LedgerKeyData {
          {
              AccountID accountID;
          } account;
-     
+
      case TRUSTLINE:
          struct
          {
              AccountID accountID;
              Asset asset;
          } trustLine;
-     
+
      case OFFER:
          struct
          {
              AccountID sellerID;
              uint64 offerID;
          } offer;
-     
+
      case DATA:
          struct
          {
@@ -2334,14 +2400,16 @@ pub struct LedgerKeyData {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LedgerKey {
-  Account(LedgerKeyAccount),
-  TrustLine(LedgerKeyTrustLine),
-  Offer(LedgerKeyOffer),
-  Data(LedgerKeyData),
+    Account(LedgerKeyAccount),
+    TrustLine(LedgerKeyTrustLine),
+    Offer(LedgerKeyOffer),
+    Data(LedgerKeyData),
 }
 
 impl Default for LedgerKey {
-  fn default() -> Self { LedgerKey::Account(LedgerKeyAccount::default()) }
+    fn default() -> Self {
+        LedgerKey::Account(LedgerKeyAccount::default())
+    }
 }
 
 /*
@@ -2356,12 +2424,14 @@ impl Default for LedgerKey {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum BucketEntryType {
-  Liveentry = 0,
-  Deadentry = 1,
+    Liveentry = 0,
+    Deadentry = 1,
 }
 
 impl Default for BucketEntryType {
-  fn default() -> Self { BucketEntryType::Liveentry }
+    fn default() -> Self {
+        BucketEntryType::Liveentry
+    }
 }
 
 /*
@@ -2371,19 +2441,21 @@ impl Default for BucketEntryType {
      {
      case LIVEENTRY:
          LedgerEntry liveEntry;
-     
+
      case DEADENTRY:
          LedgerKey deadEntry;
      };
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum BucketEntry {
-  LiveEntry(LedgerEntry),
-  DeadEntry(LedgerKey),
+    LiveEntry(LedgerEntry),
+    DeadEntry(LedgerKey),
 }
 
 impl Default for BucketEntry {
-  fn default() -> Self { BucketEntry::LiveEntry(LedgerEntry::default()) }
+    fn default() -> Self {
+        BucketEntry::LiveEntry(LedgerEntry::default())
+    }
 }
 
 /*
@@ -2397,8 +2469,8 @@ impl Default for BucketEntry {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionSet {
-  pub previous_ledger_hash: Hash,
-  pub txs: Vec<TransactionEnvelope>,
+    pub previous_ledger_hash: Hash,
+    pub txs: Vec<TransactionEnvelope>,
 }
 
 /*
@@ -2412,8 +2484,8 @@ pub struct TransactionSet {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionResultPair {
-  pub transaction_hash: Hash,
-  pub result: TransactionResult,
+    pub transaction_hash: Hash,
+    pub result: TransactionResult,
 }
 
 /*
@@ -2426,7 +2498,7 @@ pub struct TransactionResultPair {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionResultSet {
-  pub results: Vec<TransactionResultPair>,
+    pub results: Vec<TransactionResultPair>,
 }
 
 /*
@@ -2440,11 +2512,13 @@ pub struct TransactionResultSet {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionHistoryEntryExt {
-  Void,
+    Void,
 }
 
 impl Default for TransactionHistoryEntryExt {
-  fn default() -> Self { TransactionHistoryEntryExt::Void }
+    fn default() -> Self {
+        TransactionHistoryEntryExt::Void
+    }
 }
 
 /*
@@ -2454,7 +2528,7 @@ impl Default for TransactionHistoryEntryExt {
      {
          uint32 ledgerSeq;
          TransactionSet txSet;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -2466,9 +2540,9 @@ impl Default for TransactionHistoryEntryExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionHistoryEntry {
-  pub ledger_seq: Uint32,
-  pub tx_set: TransactionSet,
-  pub ext: TransactionHistoryEntryExt,
+    pub ledger_seq: Uint32,
+    pub tx_set: TransactionSet,
+    pub ext: TransactionHistoryEntryExt,
 }
 
 /*
@@ -2482,11 +2556,13 @@ pub struct TransactionHistoryEntry {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionHistoryResultEntryExt {
-  Void,
+    Void,
 }
 
 impl Default for TransactionHistoryResultEntryExt {
-  fn default() -> Self { TransactionHistoryResultEntryExt::Void }
+    fn default() -> Self {
+        TransactionHistoryResultEntryExt::Void
+    }
 }
 
 /*
@@ -2496,7 +2572,7 @@ impl Default for TransactionHistoryResultEntryExt {
      {
          uint32 ledgerSeq;
          TransactionResultSet txResultSet;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -2508,9 +2584,9 @@ impl Default for TransactionHistoryResultEntryExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionHistoryResultEntry {
-  pub ledger_seq: Uint32,
-  pub tx_result_set: TransactionResultSet,
-  pub ext: TransactionHistoryResultEntryExt,
+    pub ledger_seq: Uint32,
+    pub tx_result_set: TransactionResultSet,
+    pub ext: TransactionHistoryResultEntryExt,
 }
 
 /*
@@ -2524,11 +2600,13 @@ pub struct TransactionHistoryResultEntry {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LedgerHeaderHistoryEntryExt {
-  Void,
+    Void,
 }
 
 impl Default for LedgerHeaderHistoryEntryExt {
-  fn default() -> Self { LedgerHeaderHistoryEntryExt::Void }
+    fn default() -> Self {
+        LedgerHeaderHistoryEntryExt::Void
+    }
 }
 
 /*
@@ -2538,7 +2616,7 @@ impl Default for LedgerHeaderHistoryEntryExt {
      {
          Hash hash;
          LedgerHeader header;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -2550,9 +2628,9 @@ impl Default for LedgerHeaderHistoryEntryExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerHeaderHistoryEntry {
-  pub hash: Hash,
-  pub header: LedgerHeader,
-  pub ext: LedgerHeaderHistoryEntryExt,
+    pub hash: Hash,
+    pub header: LedgerHeader,
+    pub ext: LedgerHeaderHistoryEntryExt,
 }
 
 /*
@@ -2566,8 +2644,8 @@ pub struct LedgerHeaderHistoryEntry {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerScpMessages {
-  pub ledger_seq: Uint32,
-  pub messages: Vec<ScpEnvelope>,
+    pub ledger_seq: Uint32,
+    pub messages: Vec<ScpEnvelope>,
 }
 
 /*
@@ -2581,8 +2659,8 @@ pub struct LedgerScpMessages {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpHistoryEntryV0 {
-  pub quorum_sets: Vec<ScpQuorumSet>,
-  pub ledger_messages: LedgerScpMessages,
+    pub quorum_sets: Vec<ScpQuorumSet>,
+    pub ledger_messages: LedgerScpMessages,
 }
 
 /*
@@ -2596,11 +2674,13 @@ pub struct ScpHistoryEntryV0 {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ScpHistoryEntry {
-  V0(ScpHistoryEntryV0),
+    V0(ScpHistoryEntryV0),
 }
 
 impl Default for ScpHistoryEntry {
-  fn default() -> Self { ScpHistoryEntry::V0(ScpHistoryEntryV0::default()) }
+    fn default() -> Self {
+        ScpHistoryEntry::V0(ScpHistoryEntryV0::default())
+    }
 }
 
 /*
@@ -2617,10 +2697,10 @@ impl Default for ScpHistoryEntry {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum LedgerEntryChangeType {
-  LedgerEntryCreated = 0,
-  LedgerEntryUpdated = 1,
-  LedgerEntryRemoved = 2,
-  LedgerEntryState = 3,
+    LedgerEntryCreated = 0,
+    LedgerEntryUpdated = 1,
+    LedgerEntryRemoved = 2,
+    LedgerEntryState = 3,
 }
 
 /*
@@ -2640,14 +2720,16 @@ pub enum LedgerEntryChangeType {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LedgerEntryChange {
-  Created(LedgerEntry),
-  Updated(LedgerEntry),
-  Removed(LedgerKey),
-  State(LedgerEntry),
+    Created(LedgerEntry),
+    Updated(LedgerEntry),
+    Removed(LedgerKey),
+    State(LedgerEntry),
 }
 
 impl Default for LedgerEntryChange {
-  fn default() -> Self { LedgerEntryChange::Created(LedgerEntry::default()) }
+    fn default() -> Self {
+        LedgerEntryChange::Created(LedgerEntry::default())
+    }
 }
 
 /*
@@ -2668,7 +2750,7 @@ pub struct LedgerEntryChanges(pub Vec<LedgerEntryChange>);
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct OperationMeta {
-  pub changes: LedgerEntryChanges,
+    pub changes: LedgerEntryChanges,
 }
 
 /*
@@ -2682,8 +2764,8 @@ pub struct OperationMeta {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionMetaV1 {
-  pub tx_changes: LedgerEntryChanges,
-  pub operations: Vec<OperationMeta>,
+    pub tx_changes: LedgerEntryChanges,
+    pub operations: Vec<OperationMeta>,
 }
 
 /*
@@ -2699,12 +2781,14 @@ pub struct TransactionMetaV1 {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionMeta {
-  Operations(Vec<OperationMeta>),
-  V1(TransactionMetaV1),
+    Operations(Vec<OperationMeta>),
+    V1(TransactionMetaV1),
 }
 
 impl Default for TransactionMeta {
-  fn default() -> Self { TransactionMeta::V1(TransactionMetaV1::default()) }
+    fn default() -> Self {
+        TransactionMeta::V1(TransactionMetaV1::default())
+    }
 }
 
 /* ==== Namespace: stellar ==== */
@@ -2772,9 +2856,9 @@ pub struct DataValue(#[serde(with = "serde_bytes")] pub Vec<u8>);
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum AssetType {
-  AssetTypeNative = 0,
-  AssetTypeCreditAlphanum4 = 1,
-  AssetTypeCreditAlphanum12 = 2,
+    AssetTypeNative = 0,
+    AssetTypeCreditAlphanum4 = 1,
+    AssetTypeCreditAlphanum12 = 2,
 }
 
 /*
@@ -2788,8 +2872,9 @@ pub enum AssetType {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AssetAlphaNum4 {
-  #[serde(with = "opaque_data::fixed_length")] pub asset_code: [u8; 4],
-  pub issuer: AccountId,
+    #[serde(with = "opaque_data::fixed_length")]
+    pub asset_code: [u8; 4],
+    pub issuer: AccountId,
 }
 
 /*
@@ -2803,8 +2888,9 @@ pub struct AssetAlphaNum4 {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AssetAlphaNum12 {
-  #[serde(with = "opaque_data::fixed_length")] pub asset_code: [u8; 12],
-  pub issuer: AccountId,
+    #[serde(with = "opaque_data::fixed_length")]
+    pub asset_code: [u8; 12],
+    pub issuer: AccountId,
 }
 
 /*
@@ -2814,33 +2900,35 @@ pub struct AssetAlphaNum12 {
      {
      case ASSET_TYPE_NATIVE: // Not credit
          void;
-     
+
      case ASSET_TYPE_CREDIT_ALPHANUM4:
          struct
          {
              opaque assetCode[4]; // 1 to 4 characters
              AccountID issuer;
          } alphaNum4;
-     
+
      case ASSET_TYPE_CREDIT_ALPHANUM12:
          struct
          {
              opaque assetCode[12]; // 5 to 12 characters
              AccountID issuer;
          } alphaNum12;
-     
+
          // add other asset types here in the future
      };
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum Asset {
-  Void,
-  AlphaNum4(AssetAlphaNum4),
-  AlphaNum12(AssetAlphaNum12),
+    Void,
+    AlphaNum4(AssetAlphaNum4),
+    AlphaNum12(AssetAlphaNum12),
 }
 
 impl Default for Asset {
-    fn default() -> Self { Asset::Void }
+    fn default() -> Self {
+        Asset::Void
+    }
 }
 
 /*
@@ -2854,8 +2942,8 @@ impl Default for Asset {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Price {
-  pub n: Int32,
-  pub d: Int32,
+    pub n: Int32,
+    pub d: Int32,
 }
 
 /*
@@ -2869,8 +2957,8 @@ pub struct Price {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Liabilities {
-  pub buying: Int64,
-  pub selling: Int64,
+    pub buying: Int64,
+    pub selling: Int64,
 }
 
 /*
@@ -2887,14 +2975,16 @@ pub struct Liabilities {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum ThresholdIndexes {
-  ThresholdMasterWeight = 0,
-  ThresholdLow = 1,
-  ThresholdMed = 2,
-  ThresholdHigh = 3,
+    ThresholdMasterWeight = 0,
+    ThresholdLow = 1,
+    ThresholdMed = 2,
+    ThresholdHigh = 3,
 }
 
 impl Default for ThresholdIndexes {
-    fn default() -> Self { ThresholdIndexes::ThresholdMasterWeight }
+    fn default() -> Self {
+        ThresholdIndexes::ThresholdMasterWeight
+    }
 }
 
 /*
@@ -2911,14 +3001,16 @@ impl Default for ThresholdIndexes {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum LedgerEntryType {
-  Account = 0,
-  Trustline = 1,
-  Offer = 2,
-  Data = 3,
+    Account = 0,
+    Trustline = 1,
+    Offer = 2,
+    Data = 3,
 }
 
 impl Default for LedgerEntryType {
-    fn default() -> Self { LedgerEntryType::Account }
+    fn default() -> Self {
+        LedgerEntryType::Account
+    }
 }
 
 /*
@@ -2932,8 +3024,8 @@ impl Default for LedgerEntryType {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Signer {
-  pub key: SignerKey,
-  pub weight: Uint32,
+    pub key: SignerKey,
+    pub weight: Uint32,
 }
 
 /*
@@ -2941,7 +3033,7 @@ pub struct Signer {
 
      enum AccountFlags
      { // masks for each flag
-     
+
          // Flags set on issuer accounts
          // TrustLines are created with authorized set to "false" requiring
          // the issuer to set it for each TrustLine
@@ -2956,13 +3048,15 @@ pub struct Signer {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum AccountFlags {
-  AuthRequiredFlag = 1,
-  AuthRevocableFlag = 2,
-  AuthImmutableFlag = 4,
+    AuthRequiredFlag = 1,
+    AuthRevocableFlag = 2,
+    AuthImmutableFlag = 4,
 }
 
 impl Default for AccountFlags {
-    fn default() -> Self { AccountFlags::AuthRequiredFlag }
+    fn default() -> Self {
+        AccountFlags::AuthRequiredFlag
+    }
 }
 
 /*
@@ -2983,11 +3077,13 @@ const MASK_ACCOUNT_FLAGS: u64 = 0x7;
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum AccountEntryV1Ext {
-  Void,
+    Void,
 }
 
 impl Default for AccountEntryV1Ext {
-    fn default() -> Self { AccountEntryV1Ext::Void }
+    fn default() -> Self {
+        AccountEntryV1Ext::Void
+    }
 }
 
 /*
@@ -2996,7 +3092,7 @@ impl Default for AccountEntryV1Ext {
      struct
              {
                  Liabilities liabilities;
-     
+
                  union switch (int v)
                  {
                  case 0:
@@ -3007,8 +3103,8 @@ impl Default for AccountEntryV1Ext {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AccountEntryV1 {
-  pub liabilities: Liabilities,
-  pub ext: AccountEntryV1Ext,
+    pub liabilities: Liabilities,
+    pub ext: AccountEntryV1Ext,
 }
 
 /*
@@ -3022,7 +3118,7 @@ pub struct AccountEntryV1 {
              struct
              {
                  Liabilities liabilities;
-     
+
                  union switch (int v)
                  {
                  case 0:
@@ -3034,12 +3130,14 @@ pub struct AccountEntryV1 {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum AccountEntryExt {
-  Void,
-  V1(AccountEntryV1),
+    Void,
+    V1(AccountEntryV1),
 }
 
 impl Default for AccountEntryExt {
-    fn default() -> Self { AccountEntryExt::Void }
+    fn default() -> Self {
+        AccountEntryExt::Void
+    }
 }
 
 /*
@@ -3054,15 +3152,15 @@ impl Default for AccountEntryExt {
                                    // drives the reserve
          AccountID* inflationDest; // Account to vote for during inflation
          uint32 flags;             // see AccountFlags
-     
+
          string32 homeDomain; // can be used for reverse federation and memo lookup
-     
+
          // fields used for signatures
          // thresholds stores unsigned bytes: [weight of master|low|medium|high]
          Thresholds thresholds;
-     
+
          Signer signers<20>; // possible signers for this account
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -3072,7 +3170,7 @@ impl Default for AccountEntryExt {
              struct
              {
                  Liabilities liabilities;
-     
+
                  union switch (int v)
                  {
                  case 0:
@@ -3086,16 +3184,16 @@ impl Default for AccountEntryExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AccountEntry {
-  pub account_id: AccountId,
-  pub balance: Int64,
-  pub seq_num: SequenceNumber,
-  pub num_sub_entries: Uint32,
-  pub inflation_dest: Option<AccountId>,
-  pub flags: Uint32,
-  pub home_domain: String32,
-  pub thresholds: Thresholds,
-  pub signers: Vec<Signer>,
-  pub ext: AccountEntryExt,
+    pub account_id: AccountId,
+    pub balance: Int64,
+    pub seq_num: SequenceNumber,
+    pub num_sub_entries: Uint32,
+    pub inflation_dest: Option<AccountId>,
+    pub flags: Uint32,
+    pub home_domain: String32,
+    pub thresholds: Thresholds,
+    pub signers: Vec<Signer>,
+    pub ext: AccountEntryExt,
 }
 
 /*
@@ -3110,11 +3208,13 @@ pub struct AccountEntry {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum TrustLineFlags {
-  AuthorizedFlag = 1,
+    AuthorizedFlag = 1,
 }
 
 impl Default for TrustLineFlags {
-    fn default() -> Self { TrustLineFlags::AuthorizedFlag }
+    fn default() -> Self {
+        TrustLineFlags::AuthorizedFlag
+    }
 }
 
 /*
@@ -3135,11 +3235,13 @@ const MASK_TRUSTLINE_FLAGS: u64 = 1;
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TrustLineEntryV1Ext {
-  Void,
+    Void,
 }
 
 impl Default for TrustLineEntryV1Ext {
-    fn default() -> Self { TrustLineEntryV1Ext::Void }
+    fn default() -> Self {
+        TrustLineEntryV1Ext::Void
+    }
 }
 
 /*
@@ -3148,7 +3250,7 @@ impl Default for TrustLineEntryV1Ext {
      struct
              {
                  Liabilities liabilities;
-     
+
                  union switch (int v)
                  {
                  case 0:
@@ -3159,8 +3261,8 @@ impl Default for TrustLineEntryV1Ext {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TrustLineEntryV1 {
-  pub liabilities: Liabilities,
-  pub ext: TrustLineEntryV1Ext,
+    pub liabilities: Liabilities,
+    pub ext: TrustLineEntryV1Ext,
 }
 
 /*
@@ -3174,7 +3276,7 @@ pub struct TrustLineEntryV1 {
              struct
              {
                  Liabilities liabilities;
-     
+
                  union switch (int v)
                  {
                  case 0:
@@ -3186,12 +3288,14 @@ pub struct TrustLineEntryV1 {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TrustLineEntryExt {
-  Void,
-  V1(TrustLineEntryV1),
+    Void,
+    V1(TrustLineEntryV1),
 }
 
 impl Default for TrustLineEntryExt {
-    fn default() -> Self { TrustLineEntryExt::Void }
+    fn default() -> Self {
+        TrustLineEntryExt::Void
+    }
 }
 
 /*
@@ -3203,10 +3307,10 @@ impl Default for TrustLineEntryExt {
          Asset asset;         // type of asset (with issuer)
          int64 balance;       // how much of this asset the user has.
                               // Asset defines the unit for this;
-     
+
          int64 limit;  // balance cannot be above this
          uint32 flags; // see TrustLineFlags
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -3216,7 +3320,7 @@ impl Default for TrustLineEntryExt {
              struct
              {
                  Liabilities liabilities;
-     
+
                  union switch (int v)
                  {
                  case 0:
@@ -3230,12 +3334,12 @@ impl Default for TrustLineEntryExt {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TrustLineEntry {
-  pub account_id: AccountId,
-  pub asset: Asset,
-  pub balance: Int64,
-  pub limit: Int64,
-  pub flags: Uint32,
-  pub ext: TrustLineEntryExt,
+    pub account_id: AccountId,
+    pub asset: Asset,
+    pub balance: Int64,
+    pub limit: Int64,
+    pub flags: Uint32,
+    pub ext: TrustLineEntryExt,
 }
 
 /*
@@ -3250,11 +3354,13 @@ pub struct TrustLineEntry {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum OfferEntryFlags {
-  PassiveFlag = 1,
+    PassiveFlag = 1,
 }
 
 impl Default for OfferEntryFlags {
-    fn default() -> Self { OfferEntryFlags::PassiveFlag }
+    fn default() -> Self {
+        OfferEntryFlags::PassiveFlag
+    }
 }
 
 /*
@@ -3275,51 +3381,53 @@ const MASK_OFFERENTRY_FLAGS: u64 = 1;
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum OfferEntryExt {
-  Void,
+    Void,
 }
 
 impl Default for OfferEntryExt {
-    fn default() -> Self { OfferEntryExt::Void }
+    fn default() -> Self {
+        OfferEntryExt::Void
+    }
 }
 
 /*
-   OfferEntry is an XDR Struct defined as:
+OfferEntry is an XDR Struct defined as:
 
-     struct OfferEntry
-     {
-         AccountID sellerID;
-         uint64 offerID;
-         Asset selling; // A
-         Asset buying;  // B
-         int64 amount;  // amount of A
-     
-         /* price for this offer:
-             price of A in terms of B
-             price=AmountB/AmountA=priceNumerator/priceDenominator
-             price is after fees
-         */
-         Price price;
-         uint32 flags; // see OfferEntryFlags
-     
-         // reserved for future use
-         union switch (int v)
-         {
-         case 0:
-             void;
-         }
-         ext;
-     };
+  struct OfferEntry
+  {
+      AccountID sellerID;
+      uint64 offerID;
+      Asset selling; // A
+      Asset buying;  // B
+      int64 amount;  // amount of A
+
+      /* price for this offer:
+          price of A in terms of B
+          price=AmountB/AmountA=priceNumerator/priceDenominator
+          price is after fees
+      */
+Price price;
+uint32 flags; // see OfferEntryFlags
+
+// reserved for future use
+union switch (int v)
+{
+case 0:
+void;
+}
+ext;
+};
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct OfferEntry {
-  pub seller_id: AccountId,
-  pub offer_id: Uint64,
-  pub selling: Asset,
-  pub buying: Asset,
-  pub amount: Int64,
-  pub price: Price,
-  pub flags: Uint32,
-  pub ext: OfferEntryExt,
+    pub seller_id: AccountId,
+    pub offer_id: Uint64,
+    pub selling: Asset,
+    pub buying: Asset,
+    pub amount: Int64,
+    pub price: Price,
+    pub flags: Uint32,
+    pub ext: OfferEntryExt,
 }
 
 /*
@@ -3333,11 +3441,13 @@ pub struct OfferEntry {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum DataEntryExt {
-  Void,
+    Void,
 }
 
 impl Default for DataEntryExt {
-    fn default() -> Self { DataEntryExt::Void }
+    fn default() -> Self {
+        DataEntryExt::Void
+    }
 }
 
 /*
@@ -3348,7 +3458,7 @@ impl Default for DataEntryExt {
          AccountID accountID; // account this data belongs to
          string64 dataName;
          DataValue dataValue;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -3360,10 +3470,10 @@ impl Default for DataEntryExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct DataEntry {
-  pub account_id: AccountId,
-  pub data_name: String64,
-  pub data_value: DataValue,
-  pub ext: DataEntryExt,
+    pub account_id: AccountId,
+    pub data_name: String64,
+    pub data_value: DataValue,
+    pub ext: DataEntryExt,
 }
 
 /*
@@ -3383,14 +3493,16 @@ pub struct DataEntry {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LedgerEntryData {
-  Account(AccountEntry),
-  TrustLine(TrustLineEntry),
-  Offer(OfferEntry),
-  Data(DataEntry),
+    Account(AccountEntry),
+    TrustLine(TrustLineEntry),
+    Offer(OfferEntry),
+    Data(DataEntry),
 }
 
 impl Default for LedgerEntryData {
-    fn default() -> Self { LedgerEntryData::Account(AccountEntry::default()) }
+    fn default() -> Self {
+        LedgerEntryData::Account(AccountEntry::default())
+    }
 }
 
 /*
@@ -3404,11 +3516,13 @@ impl Default for LedgerEntryData {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LedgerEntryExt {
-  Void,
+    Void,
 }
 
 impl Default for LedgerEntryExt {
-    fn default() -> Self { LedgerEntryExt::Void }
+    fn default() -> Self {
+        LedgerEntryExt::Void
+    }
 }
 
 /*
@@ -3417,7 +3531,7 @@ impl Default for LedgerEntryExt {
      struct LedgerEntry
      {
          uint32 lastModifiedLedgerSeq; // ledger the LedgerEntry was last changed
-     
+
          union switch (LedgerEntryType type)
          {
          case ACCOUNT:
@@ -3430,7 +3544,7 @@ impl Default for LedgerEntryExt {
              DataEntry data;
          }
          data;
-     
+
          // reserved for future use
          union switch (int v)
          {
@@ -3442,9 +3556,9 @@ impl Default for LedgerEntryExt {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerEntry {
-  pub last_modified_ledger_seq: Uint32,
-  pub data: LedgerEntryData,
-  pub ext: LedgerEntryExt,
+    pub last_modified_ledger_seq: Uint32,
+    pub data: LedgerEntryData,
+    pub ext: LedgerEntryExt,
 }
 
 /*
@@ -3460,13 +3574,15 @@ pub struct LedgerEntry {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum EnvelopeType {
-  EnvelopeTypeScp = 1,
-  EnvelopeTypeTx = 2,
-  EnvelopeTypeAuth = 3,
+    EnvelopeTypeScp = 1,
+    EnvelopeTypeTx = 2,
+    EnvelopeTypeAuth = 3,
 }
 
 impl Default for EnvelopeType {
-    fn default() -> Self { EnvelopeType::EnvelopeTypeScp }
+    fn default() -> Self {
+        EnvelopeType::EnvelopeTypeScp
+    }
 }
 
 /* ==== Namespace: stellar ==== */
@@ -3489,8 +3605,8 @@ pub struct Value(#[serde(with = "serde_bytes")] pub Vec<u8>);
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpBallot {
-  pub counter: Uint32,
-  pub value: Value,
+    pub counter: Uint32,
+    pub value: Value,
 }
 
 /*
@@ -3507,14 +3623,16 @@ pub struct ScpBallot {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum ScpStatementType {
-  ScpStPrepare = 0,
-  ScpStConfirm = 1,
-  ScpStExternalize = 2,
-  ScpStNominate = 3,
+    ScpStPrepare = 0,
+    ScpStConfirm = 1,
+    ScpStExternalize = 2,
+    ScpStNominate = 3,
 }
 
 impl Default for ScpStatementType {
-    fn default() -> Self { ScpStatementType::ScpStPrepare }
+    fn default() -> Self {
+        ScpStatementType::ScpStPrepare
+    }
 }
 
 /*
@@ -3529,9 +3647,9 @@ impl Default for ScpStatementType {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpNomination {
-  pub quorum_set_hash: Hash,
-  pub votes: Vec<Value>,
-  pub accepted: Vec<Value>,
+    pub quorum_set_hash: Hash,
+    pub votes: Vec<Value>,
+    pub accepted: Vec<Value>,
 }
 
 /*
@@ -3549,12 +3667,12 @@ pub struct ScpNomination {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpStatementPrepare {
-  pub quorum_set_hash: Hash,
-  pub ballot: ScpBallot,
-  pub prepared: Option<ScpBallot>,
-  pub prepared_prime: Option<ScpBallot>,
-  pub n_c: Uint32,
-  pub n_h: Uint32,
+    pub quorum_set_hash: Hash,
+    pub ballot: ScpBallot,
+    pub prepared: Option<ScpBallot>,
+    pub prepared_prime: Option<ScpBallot>,
+    pub n_c: Uint32,
+    pub n_h: Uint32,
 }
 
 /*
@@ -3571,11 +3689,11 @@ pub struct ScpStatementPrepare {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpStatementConfirm {
-  pub ballot: ScpBallot,
-  pub n_prepared: Uint32,
-  pub n_commit: Uint32,
-  pub n_h: Uint32,
-  pub quorum_set_hash: Hash,
+    pub ballot: ScpBallot,
+    pub n_prepared: Uint32,
+    pub n_commit: Uint32,
+    pub n_h: Uint32,
+    pub quorum_set_hash: Hash,
 }
 
 /*
@@ -3590,9 +3708,9 @@ pub struct ScpStatementConfirm {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpStatementExternalize {
-  pub commit: ScpBallot,
-  pub n_h: Uint32,
-  pub commit_quorum_set_hash: Hash,
+    pub commit: ScpBallot,
+    pub n_h: Uint32,
+    pub commit_quorum_set_hash: Hash,
 }
 
 /*
@@ -3632,14 +3750,16 @@ pub struct ScpStatementExternalize {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum ScpStatementPledges {
-  Prepare(ScpStatementPrepare),
-  Confirm(ScpStatementConfirm),
-  Externalize(ScpStatementExternalize),
-  Nominate(ScpNomination),
+    Prepare(ScpStatementPrepare),
+    Confirm(ScpStatementConfirm),
+    Externalize(ScpStatementExternalize),
+    Nominate(ScpNomination),
 }
 
 impl Default for ScpStatementPledges {
-    fn default() -> Self { ScpStatementPledges::Prepare(ScpStatementPrepare::default()) }
+    fn default() -> Self {
+        ScpStatementPledges::Prepare(ScpStatementPrepare::default())
+    }
 }
 
 /*
@@ -3649,7 +3769,7 @@ impl Default for ScpStatementPledges {
      {
          NodeID nodeID;    // v
          uint64 slotIndex; // i
-     
+
          union switch (SCPStatementType type)
          {
          case SCP_ST_PREPARE:
@@ -3686,9 +3806,9 @@ impl Default for ScpStatementPledges {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpStatement {
-  pub node_id: NodeId,
-  pub slot_index: Uint64,
-  pub pledges: ScpStatementPledges,
+    pub node_id: NodeId,
+    pub slot_index: Uint64,
+    pub pledges: ScpStatementPledges,
 }
 
 /*
@@ -3702,8 +3822,8 @@ pub struct ScpStatement {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpEnvelope {
-  pub statement: ScpStatement,
-  pub signature: Signature,
+    pub statement: ScpStatement,
+    pub signature: Signature,
 }
 
 /*
@@ -3718,9 +3838,9 @@ pub struct ScpEnvelope {
 */
 #[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpQuorumSet {
-  pub threshold: Uint32,
-  pub validators: Vec<PublicKey>,
-  pub inner_sets: Vec<ScpQuorumSet>,
+    pub threshold: Uint32,
+    pub validators: Vec<PublicKey>,
+    pub inner_sets: Vec<ScpQuorumSet>,
 }
 
 /* Bottom matter */

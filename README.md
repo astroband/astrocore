@@ -11,20 +11,3 @@ We already complete handsnake process with remote peer. So you can monitor all m
 ```
 RUST_LOG="astrocore=debug" RUSTFLAGS=-Awarnings cargo run
 ```
-
-## Current problems
-
-Many problems with XDR library. See the [issues](https://github.com/Arkweid/stellar-explorer-rust/issues).
-
-## Tests
-
-1. go to `ruby_xdr/`
-2. Run
-```
-bundle install
-```
-3. Return to root directory
-4. Run
-```
-RUSTFLAGS=-Awarnings cargo test
-```
