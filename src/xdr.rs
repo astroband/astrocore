@@ -248,7 +248,7 @@ pub struct HmacSha256Mac {
          Signature signature; // actual signature
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct DecoratedSignature {
   pub hint: SignatureHint,
   pub signature: Signature,
@@ -339,7 +339,7 @@ pub struct PaymentOp {
          Asset path<5>; // additional hops it must go through to get there
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct PathPaymentOp {
   pub send_asset: Asset,
   pub send_max: Int64,
@@ -414,7 +414,7 @@ pub struct CreatePassiveOfferOp {
          Signer* signer;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct SetOptionsOp {
   pub inflation_dest: Option<AccountId>,
   pub clear_flags: Option<Uint32>,
@@ -507,7 +507,7 @@ pub struct AllowTrustOp {
          DataValue* dataValue; // set to null to clear
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ManageDataOp {
   pub data_name: String64,
   pub data_value: Option<DataValue>,
@@ -662,7 +662,7 @@ pub enum MemoType {
          Hash retHash; // the hash of the tx you are rejecting
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum Memo {
   Void,
   Text(String),
@@ -738,7 +738,7 @@ impl Default for TransactionExt {
          ext;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Transaction {
   pub source_account: AccountId,
   pub fee: Uint32,
@@ -800,7 +800,7 @@ pub struct TransactionSignaturePayload {
          DecoratedSignature signatures<20>;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionEnvelope {
   pub tx: Transaction,
   pub signatures: Vec<DecoratedSignature>,
@@ -1000,7 +1000,7 @@ pub struct SimplePaymentResult {
              SimplePaymentResult last;
          }
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct PathPaymentResultSuccess {
   pub offers: Vec<ClaimOfferAtom>,
   pub last: SimplePaymentResult,
@@ -1133,7 +1133,7 @@ impl Default for ManageOfferSuccessResultOffer {
          offer;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ManageOfferSuccessResult {
   pub offers_claimed: Vec<ClaimOfferAtom>,
   pub offer: ManageOfferSuccessResultOffer,
@@ -1390,7 +1390,7 @@ pub struct InflationPayout {
          void;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum InflationResult {
   Payouts(Vec<InflationPayout>),
   Void,
@@ -1669,7 +1669,7 @@ impl Default for TransactionResultCode {
              void;
          }
 */
-#[derive( Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionResultResult {
   Results(Vec<OperationResult>),
   Void,
@@ -1805,7 +1805,7 @@ pub struct AuthCert {
          uint256 nonce;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct Hello {
   pub ledger_version: Uint32,
   pub overlay_version: Uint32,
@@ -1999,7 +1999,7 @@ pub struct DontHave {
          uint32 getSCPLedgerSeq; // ledger seq requested ; if 0, requests the latest
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum StellarMessage {
   Error(Error),
   Void,
@@ -2112,7 +2112,7 @@ impl Default for StellarValueExt {
          ext;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct StellarValue {
   pub tx_set_hash: Hash,
   pub close_time: TimePoint,
@@ -2293,7 +2293,7 @@ pub struct LedgerKeyOffer {
              string64 dataName;
          }
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerKeyData {
   pub account_id: AccountId,
   pub data_name: String64,
@@ -2395,7 +2395,7 @@ impl Default for BucketEntry {
          TransactionEnvelope txs<>;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionSet {
   pub previous_ledger_hash: Hash,
   pub txs: Vec<TransactionEnvelope>,
@@ -2424,7 +2424,7 @@ pub struct TransactionResultPair {
          TransactionResultPair results<>;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct TransactionResultSet {
   pub results: Vec<TransactionResultPair>,
 }
@@ -2564,7 +2564,7 @@ pub struct LedgerHeaderHistoryEntry {
          SCPEnvelope messages<>;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct LedgerScpMessages {
   pub ledger_seq: Uint32,
   pub messages: Vec<ScpEnvelope>,
@@ -2579,7 +2579,7 @@ pub struct LedgerScpMessages {
          LedgerSCPMessages ledgerMessages;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpHistoryEntryV0 {
   pub quorum_sets: Vec<ScpQuorumSet>,
   pub ledger_messages: LedgerScpMessages,
@@ -2697,7 +2697,7 @@ pub struct TransactionMetaV1 {
          TransactionMetaV1 v1;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum TransactionMeta {
   Operations(Vec<OperationMeta>),
   V1(TransactionMetaV1),
@@ -3084,7 +3084,7 @@ impl Default for AccountEntryExt {
          ext;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct AccountEntry {
   pub account_id: AccountId,
   pub balance: Int64,
@@ -3358,7 +3358,7 @@ impl Default for DataEntryExt {
          ext;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct DataEntry {
   pub account_id: AccountId,
   pub data_name: String64,
@@ -3487,7 +3487,7 @@ pub struct Value(#[serde(with = "serde_bytes")] pub Vec<u8>);
          Value value;    // x
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpBallot {
   pub counter: Uint32,
   pub value: Value,
@@ -3527,7 +3527,7 @@ impl Default for ScpStatementType {
          Value accepted<>;   // Y
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpNomination {
   pub quorum_set_hash: Hash,
   pub votes: Vec<Value>,
@@ -3700,7 +3700,7 @@ pub struct ScpStatement {
          Signature signature;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpEnvelope {
   pub statement: ScpStatement,
   pub signature: Signature,
@@ -3716,7 +3716,7 @@ pub struct ScpEnvelope {
          SCPQuorumSet innerSets<>;
      };
 */
-#[derive( Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScpQuorumSet {
   pub threshold: Uint32,
   pub validators: Vec<PublicKey>,
