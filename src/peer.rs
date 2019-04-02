@@ -136,12 +136,12 @@ impl<'a> Peer<'a> {
         &mut self,
         remote_pub_key: xdr::Curve25519Public,
         received_nonce: xdr::Uint256,
-        is_we_called: bool,
+        we_called_remote: bool,
     ) {
         let mut public_a: [u8; 32] = Default::default();
         let mut public_b: [u8; 32] = Default::default();
 
-        if is_we_called {
+        if we_called_remote {
             public_a.copy_from_slice(&self.auth_public_key.0[..]);
             public_b.copy_from_slice(&remote_pub_key.key[..]);
         } else {
@@ -166,7 +166,7 @@ impl<'a> Peer<'a> {
         // and B is local and A is remote.
 
         let mut buffer: Vec<u8> = Default::default();
-        if is_we_called {
+        if we_called_remote {
             buffer.push(0)
         } else {
             buffer.push(1)
@@ -180,7 +180,7 @@ impl<'a> Peer<'a> {
         // Set up receivingMacKey
         let mut buffer: Vec<u8> = Default::default();
 
-        if is_we_called {
+        if we_called_remote {
             buffer.push(0)
         } else {
             buffer.push(1)
@@ -237,13 +237,13 @@ impl<'a> Peer<'a> {
     fn send_message(&mut self, message: xdr::StellarMessage) {
         let mut am0 = xdr::AuthenticatedMessageV0 {
             sequence: self.send_message_sequence,
-            message: message.clone(),
+            message: message,
             mac: xdr::HmacSha256Mac {
                 mac: crypto::HmacSha256Mac::zero().0,
             },
         };
 
-        match message {
+        match am0.message {
             xdr::StellarMessage::Hello(_) | xdr::StellarMessage::Error(_) => {}
             _ => {
                 let mut packed_auth_message_v0 = Vec::new();
