@@ -7,14 +7,14 @@ use std::io::{Cursor, Read, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::crypto;
-use crate::node_info::NodeInfo;
+use crate::scp::local_node::LocalNode;
 use crate::xdr;
 
 use serde_xdr;
 
 pub struct Peer<'a> {
     /// Information about our node
-    node_info: &'a NodeInfo,
+    node_info: &'a LocalNode,
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
     /// Current message sequence position.
@@ -45,7 +45,7 @@ pub struct Peer<'a> {
 
 impl<'a> Peer<'a> {
     /// Return peer instance with connection
-    pub fn new(node_info: &'a NodeInfo, stream: std::net::TcpStream, address: String) -> Peer<'a> {
+    pub fn new(node_info: &'a LocalNode, stream: std::net::TcpStream, address: String) -> Peer<'a> {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
 
@@ -105,20 +105,20 @@ impl<'a> Peer<'a> {
     /// Start connection process to peer.
     /// More additional info: https://github.com/stellar/stellar-core/blob/ddef8bcacc5193bdd4daa07af404f1b6b1adaf39/src/overlay/OverlayManagerImpl.cpp#L28-L45
     pub fn start_authentication(&mut self) -> () {
-        info!("Started authentication proccess...");
+        info!("[Overlay] Started authentication proccess...");
 
         self.send_message(xdr::StellarMessage::Hello(self.hello.clone()));
         match self.receive_message().unwrap() {
             xdr::AuthenticatedMessage::V0(hello) => {
                 self.handle_hello(hello.message);
             }
-            _ => unreachable!("Received not auth message!"),
+            _ => unreachable!("[Overlay] Received not auth message!"),
         }
 
         self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
         self.receive_message().unwrap(); // last auth message from remote peer
 
-        info!("Authentication completed!");
+        info!("[Overlay] Authentication completed!");
     }
 
     fn handle_hello(&mut self, received_hello: xdr::StellarMessage) {
@@ -127,7 +127,7 @@ impl<'a> Peer<'a> {
                 self.set_remote_keys(hello.cert.pubkey, hello.nonce, true);
                 self.peer_info = hello;
             }
-            _ => unreachable!("Received non hello message"),
+            _ => unreachable!("[Overlay] Received non hello message"),
         }
     }
 
@@ -194,7 +194,7 @@ impl<'a> Peer<'a> {
 
     /// Make expired certicate for all connection with peers
     fn get_auth_cert(
-        node_info: &NodeInfo,
+        node_info: &LocalNode,
         auth_public_key: &crypto::Curve25519Public,
     ) -> xdr::AuthCert {
         let unix_time = SystemTime::now()
@@ -299,7 +299,7 @@ impl<'a> Peer<'a> {
         message_length |= header[3] as usize;
 
         debug!(
-            "RECEIVE HEADER {:?} \nWITH LENGTH {:?}",
+            "[Overlay] RECEIVE HEADER {:?} \nWITH LENGTH {:?}",
             header, message_length
         );
 
@@ -312,10 +312,10 @@ impl<'a> Peer<'a> {
         let message_length = self.receive_header();
 
         let mut message_content = vec![0u8; message_length];
-        debug!("Message len {:?}", message_content.len());
+        debug!("[Overlay] Message len {:?}", message_content.len());
 
         self.stream.read_exact(&mut message_content).unwrap();
-        debug!("Message content {:?}", message_content);
+        debug!("[Overlay] Message content {:?}", message_content);
 
         let mut cursor = Cursor::new(message_content);
 

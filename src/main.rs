@@ -4,11 +4,11 @@ use std::time::Duration;
 
 mod crypto;
 mod network;
-mod peer;
+mod overlay;
 mod xdr;
-use peer::Peer;
-mod node_info;
-use node_info::NodeInfo;
+use overlay::peer::Peer;
+mod scp;
+use scp::local_node::LocalNode;
 
 const SECRET_TEST_SEED: &str = "SATKBWSRLPHGM2FKMLZ4QNH64XYKP7J2O6U5QNFBJHYEXDSHN75R5MVE";
 
@@ -16,7 +16,7 @@ fn main() {
     env_logger::init();
 
     let seed = String::from(SECRET_TEST_SEED);
-    let node = NodeInfo::new(seed, &network::Network::test_network().network_id());
+    let node = LocalNode::new(seed, &network::Network::test_network().network_id());
     let peer_address = String::from("54.160.175.7:11625"); // test address
 
     match TcpStream::connect_timeout(&peer_address.parse().unwrap(), Duration::new(5, 0)) {
