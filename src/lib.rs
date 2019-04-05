@@ -13,5 +13,7 @@ extern crate serde;
 extern crate serde_bytes;
 extern crate serde_derive;
 extern crate serde_xdr;
+#[macro_use]
+extern crate double;
 
 pub mod xdr;

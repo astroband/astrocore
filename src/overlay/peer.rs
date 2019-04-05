@@ -12,6 +12,9 @@ use crate::xdr;
 
 use serde_xdr;
 
+// #[macro_use]
+use double::{mock_trait, mock_method};
+
 pub struct Peer<'a> {
     /// Information about our node
     node_info: &'a LocalNode,
@@ -41,6 +44,34 @@ pub struct Peer<'a> {
     address: String,
     /// Received hello message from peer
     peer_info: xdr::Hello,
+    /// authenticated peer flag
+    is_authenticated: bool,
+}
+
+trait PeerInterface<'a> {
+    fn new(node_info: &'a LocalNode, stream: std::net::TcpStream, address: String) -> Self;
+    fn start_authentication(&mut self) -> ();
+    fn handle_hello(&mut self, received_hello: xdr::StellarMessage) -> ();
+    fn set_remote_keys(
+        &mut self,
+        remote_pub_key: xdr::Curve25519Public,
+        received_nonce: xdr::Uint256,
+        we_called_remote: bool,
+    ) -> ();
+    fn new_auth_cert(
+        node_info: &LocalNode,
+        auth_public_key: &crypto::Curve25519Public,
+    ) -> xdr::AuthCert;
+    fn send_message(&mut self, message: xdr::StellarMessage);
+    fn send_header(&mut self, message_length: u32);
+    fn receive_message(
+        &mut self,
+    ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError>;
+    fn receive_header(&mut self) -> usize;
+    fn increment_message_sequence(&mut self);
+    fn set_authenticated(&mut self);
+    fn is_authenticated(&self) -> bool;
+    fn address(&self) -> &String;
 }
 
 impl<'a> Peer<'a> {
@@ -56,7 +87,7 @@ impl<'a> Peer<'a> {
         public_key.copy_from_slice(node_info.key_pair.public_key().buf());
         let peer_id = xdr::PublicKey::Ed25519(xdr::Uint256(public_key));
 
-        let auth_cert = Peer::get_auth_cert(&node_info, &auth_public_key);
+        let auth_cert = Peer::new_auth_cert(&node_info, &auth_public_key);
 
         let hello = xdr::Hello {
             ledger_version: 9000 as xdr::Uint32,
@@ -84,6 +115,7 @@ impl<'a> Peer<'a> {
             hello: hello,
             address: address,
             peer_info: Default::default(),
+            is_authenticated: false,
         }
     }
 
@@ -105,20 +137,31 @@ impl<'a> Peer<'a> {
     /// Start connection process to peer.
     /// More additional info: https://github.com/stellar/stellar-core/blob/ddef8bcacc5193bdd4daa07af404f1b6b1adaf39/src/overlay/OverlayManagerImpl.cpp#L28-L45
     pub fn start_authentication(&mut self) -> () {
-        info!("[Overlay] Started authentication proccess...");
+        info!(
+            "[Overlay] Started authentication proccess peer: {}",
+            self.address
+        );
 
         self.send_message(xdr::StellarMessage::Hello(self.hello.clone()));
         match self.receive_message().unwrap() {
             xdr::AuthenticatedMessage::V0(hello) => {
                 self.handle_hello(hello.message);
             }
-            _ => unreachable!("[Overlay] Received not auth message!"),
+            _ => unreachable!(
+                "[Overlay] Received not auth message for peer {}",
+                self.address
+            ),
         }
 
         self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
         self.receive_message().unwrap(); // last auth message from remote peer
 
-        info!("[Overlay] Authentication completed!");
+        self.set_authenticated();
+
+        info!(
+            "[Overlay] Authentication completed for peer {}",
+            self.address
+        );
     }
 
     fn handle_hello(&mut self, received_hello: xdr::StellarMessage) {
@@ -193,7 +236,7 @@ impl<'a> Peer<'a> {
     }
 
     /// Make expired certicate for all connection with peers
-    fn get_auth_cert(
+    fn new_auth_cert(
         node_info: &LocalNode,
         auth_public_key: &crypto::Curve25519Public,
     ) -> xdr::AuthCert {
@@ -234,7 +277,7 @@ impl<'a> Peer<'a> {
 
     // TODO: mutex required?
     /// Send XDR message to remote peer
-    fn send_message(&mut self, message: xdr::StellarMessage) {
+    pub fn send_message(&mut self, message: xdr::StellarMessage) {
         let mut am0 = xdr::AuthenticatedMessageV0 {
             sequence: self.send_message_sequence,
             message: message,
@@ -330,4 +373,24 @@ impl<'a> Peer<'a> {
     fn increment_message_sequence(&mut self) {
         self.send_message_sequence = self.send_message_sequence + 1;
     }
+
+    pub fn set_authenticated(&mut self) {
+        self.is_authenticated = true;
+    }
+
+    pub fn is_authenticated(&self) -> bool {
+        self.is_authenticated
+    }
+
+    pub fn address(&self) -> &String {
+        &self.address
+    }
 }
+
+// Test which uses a mock BalanceSheet
+// mock_trait!(
+//     MockBalanceSheet,
+//     profit(u32, u32) -> i32);
+// impl Peer for MockBalanceSheet {
+//     mock_method!(profit(&self, revenue: u32, costs: u32) -> i32);
+// }
