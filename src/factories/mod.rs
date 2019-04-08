@@ -1,6 +1,9 @@
 pub mod external_xdr;
 pub mod external_xdr_stub;
+pub mod flood_gate;
 pub mod internal_xdr;
+pub mod local_node;
+pub mod peer;
 
 use serde::ser::Serialize;
 

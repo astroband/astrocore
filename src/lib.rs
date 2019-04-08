@@ -13,7 +13,12 @@ extern crate serde;
 extern crate serde_bytes;
 extern crate serde_derive;
 extern crate serde_xdr;
-#[macro_use]
-extern crate double;
 
+extern crate simulacrum;
+
+pub mod crypto;
+pub mod factories;
+pub mod network;
+pub mod overlay;
+pub mod scp;
 pub mod xdr;

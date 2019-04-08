@@ -1,5 +1,5 @@
 use crate::overlay::message_abbr;
-use crate::overlay::peer::Peer;
+use crate::overlay::peer::PeerInterface;
 use crate::xdr;
 use log::info;
 use std::collections::HashMap;
@@ -18,14 +18,14 @@ use std::time::{SystemTime, UNIX_EPOCH};
  * is purged from the FloodGate when the ledger closes.
  */
 
-struct FloodGate {
+pub struct FloodGate {
     /// set of received messages
     pub flood_map: HashMap<String, FloodRecord>,
     /// shutdown flag
     pub m_shutting_down: bool,
 }
 
-struct FloodRecord {
+pub struct FloodRecord {
     /// current ledger block
     pub m_ledger_seq: u32,
     /// received message
@@ -35,7 +35,7 @@ struct FloodRecord {
 }
 
 impl FloodGate {
-    fn new() -> Self {
+    pub fn new() -> Self {
         FloodGate {
             flood_map: HashMap::new(),
             m_shutting_down: false,
@@ -78,7 +78,7 @@ impl FloodGate {
     }
 
     // send message to anyone you haven't gotten it from
-    pub fn broadcast(&mut self, message: xdr::StellarMessage, force: bool, peers: &mut [Peer]) {
+    pub fn broadcast<T: PeerInterface>(&mut self, message: xdr::StellarMessage, force: bool, peers: &mut [T]) {
         if self.m_shutting_down {
             return;
         };
@@ -119,7 +119,11 @@ impl FloodGate {
 }
 
 impl FloodRecord {
-    fn build(m_ledger_seq: u32, m_message: xdr::StellarMessage, m_peers_told: Vec<String>) -> Self {
+    pub fn build(
+        m_ledger_seq: u32,
+        m_message: xdr::StellarMessage,
+        m_peers_told: Vec<String>,
+    ) -> Self {
         FloodRecord {
             m_ledger_seq,
             m_message,
@@ -131,6 +135,7 @@ impl FloodRecord {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::factories::flood_gate::build_flood_gate;
 
     mod clear_below {
         use super::*;
@@ -214,41 +219,29 @@ mod tests {
 
     mod broadcast {
         use super::*;
+        use crate::factories::peer::{PeerMock};
 
-        pub trait Peer {
-            fn move_forward(&mut self, kek: i32) -> ();
+        #[test]
+        fn broadcast() {
+            let mut flood_gate = build_flood_gate();
+            flood_gate.flood_map.clear();
+
+            let peer_mock1 = PeerMock { address: "0.0.0.0".to_string(), is_authenticated: true };
+            let peer_mock2 = PeerMock { address: "0.0.0.1".to_string(), is_authenticated: true };
+            let peer_mock3 = PeerMock { address: "0.0.0.2".to_string(), is_authenticated: true };
+
+            let mut peers = vec![peer_mock1, peer_mock2, peer_mock3];
+
+            let message = xdr::StellarMessage::default();
+            let index = message_abbr(&message);
+
+            flood_gate.broadcast(message, false, &mut peers);
+
+            let record = flood_gate.flood_map.get(&index).expect("record should exist");
+
+            let expect_m_peers_told = vec!["self".to_string(), "0.0.0.0".to_string(), "0.0.0.1".to_string(), "0.0.0.2".to_string()];
+            assert_eq!(record.m_peers_told, expect_m_peers_told);
         }
-
-        // mock_trait!(
-        //     MockPeer,
-        //     move_forward(i32) -> ()
-        // );
-    }
-
-    fn build_flood_gate() -> FloodGate {
-        let mut flood_gate = FloodGate::new();
-
-        let message = xdr::StellarMessage::default();
-
-        flood_gate.flood_map.insert(
-            "123".to_string(),
-            FloodRecord::build(100, message.clone(), vec!["192.168.1.1".to_string()]),
-        );
-        flood_gate.flood_map.insert(
-            "345".to_string(),
-            FloodRecord::build(200, message.clone(), vec!["192.168.2.2".to_string()]),
-        );
-        flood_gate.flood_map.insert(
-            "678".to_string(),
-            FloodRecord::build(300, message.clone(), vec!["192.168.3.3".to_string()]),
-        );
-
-        flood_gate.flood_map.insert(
-            message_abbr(&message),
-            FloodRecord::build(400, message.clone(), vec!["192.168.4.4".to_string()]),
-        );
-
-        flood_gate
     }
 
     #[test]

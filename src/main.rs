@@ -6,7 +6,8 @@ mod crypto;
 mod network;
 mod overlay;
 mod xdr;
-use overlay::peer::Peer;
+mod factories;
+use overlay::peer::{Peer, PeerInterface};
 mod scp;
 use scp::local_node::LocalNode;
 
@@ -24,7 +25,7 @@ fn main() {
             info!("Successfully connected to peer {}", peer_address);
             let cloned_stream = stream.try_clone().expect("clone failed...");
 
-            let mut peer = Peer::new(&node, cloned_stream, peer_address);
+            let mut peer = Peer::new(node, cloned_stream, peer_address);
             peer.start_authentication();
 
             loop {

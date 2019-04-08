@@ -12,12 +12,9 @@ use crate::xdr;
 
 use serde_xdr;
 
-// #[macro_use]
-use double::{mock_trait, mock_method};
-
-pub struct Peer<'a> {
+pub struct Peer {
     /// Information about our node
-    node_info: &'a LocalNode,
+    node_info: LocalNode,
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
     /// Current message sequence position.
@@ -48,8 +45,7 @@ pub struct Peer<'a> {
     is_authenticated: bool,
 }
 
-trait PeerInterface<'a> {
-    fn new(node_info: &'a LocalNode, stream: std::net::TcpStream, address: String) -> Self;
+pub trait PeerInterface {
     fn start_authentication(&mut self) -> ();
     fn handle_hello(&mut self, received_hello: xdr::StellarMessage) -> ();
     fn set_remote_keys(
@@ -74,9 +70,9 @@ trait PeerInterface<'a> {
     fn address(&self) -> &String;
 }
 
-impl<'a> Peer<'a> {
+impl Peer {
     /// Return peer instance with connection
-    pub fn new(node_info: &'a LocalNode, stream: std::net::TcpStream, address: String) -> Peer<'a> {
+    pub fn new(node_info: LocalNode, stream: std::net::TcpStream, address: String) -> Peer {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
 
@@ -102,7 +98,7 @@ impl<'a> Peer<'a> {
         };
 
         Peer {
-            node_info: &node_info,
+            node_info: node_info,
             stream: stream,
             send_message_sequence: 0 as xdr::Uint64,
             cached_auth_cert: auth_cert,
@@ -118,7 +114,9 @@ impl<'a> Peer<'a> {
             is_authenticated: false,
         }
     }
+}
 
+impl PeerInterface for Peer {
     // Connection process:
     // A wants to connect to B
     // A initiates a tcp connection to B
@@ -136,7 +134,7 @@ impl<'a> Peer<'a> {
     // If any verify step fails, the peer disconnects immediately.
     /// Start connection process to peer.
     /// More additional info: https://github.com/stellar/stellar-core/blob/ddef8bcacc5193bdd4daa07af404f1b6b1adaf39/src/overlay/OverlayManagerImpl.cpp#L28-L45
-    pub fn start_authentication(&mut self) -> () {
+    fn start_authentication(&mut self) -> () {
         info!(
             "[Overlay] Started authentication proccess peer: {}",
             self.address
@@ -277,7 +275,7 @@ impl<'a> Peer<'a> {
 
     // TODO: mutex required?
     /// Send XDR message to remote peer
-    pub fn send_message(&mut self, message: xdr::StellarMessage) {
+    fn send_message(&mut self, message: xdr::StellarMessage) {
         let mut am0 = xdr::AuthenticatedMessageV0 {
             sequence: self.send_message_sequence,
             message: message,
@@ -349,7 +347,7 @@ impl<'a> Peer<'a> {
         return message_length;
     }
 
-    pub fn receive_message(
+    fn receive_message(
         &mut self,
     ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> {
         let message_length = self.receive_header();
@@ -374,23 +372,15 @@ impl<'a> Peer<'a> {
         self.send_message_sequence = self.send_message_sequence + 1;
     }
 
-    pub fn set_authenticated(&mut self) {
+    fn set_authenticated(&mut self) {
         self.is_authenticated = true;
     }
 
-    pub fn is_authenticated(&self) -> bool {
+    fn is_authenticated(&self) -> bool {
         self.is_authenticated
     }
 
-    pub fn address(&self) -> &String {
+    fn address(&self) -> &String {
         &self.address
     }
 }
-
-// Test which uses a mock BalanceSheet
-// mock_trait!(
-//     MockBalanceSheet,
-//     profit(u32, u32) -> i32);
-// impl Peer for MockBalanceSheet {
-//     mock_method!(profit(&self, revenue: u32, costs: u32) -> i32);
-// }
