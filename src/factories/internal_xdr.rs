@@ -1,7 +1,4 @@
-extern crate astrocore;
-extern crate serde_xdr;
-
-use astrocore::xdr;
+use crate::xdr;
 use serde::ser::Serialize;
 use serde_xdr::to_bytes;
 

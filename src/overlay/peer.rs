@@ -12,9 +12,9 @@ use crate::xdr;
 
 use serde_xdr;
 
-pub struct Peer<'a> {
+pub struct Peer {
     /// Information about our node
-    node_info: &'a LocalNode,
+    node_info: LocalNode,
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
     /// Current message sequence position.
@@ -41,11 +41,38 @@ pub struct Peer<'a> {
     address: String,
     /// Received hello message from peer
     peer_info: xdr::Hello,
+    /// authenticated peer flag
+    is_authenticated: bool,
 }
 
-impl<'a> Peer<'a> {
+pub trait PeerInterface {
+    fn start_authentication(&mut self) -> ();
+    fn handle_hello(&mut self, received_hello: xdr::StellarMessage) -> ();
+    fn set_remote_keys(
+        &mut self,
+        remote_pub_key: xdr::Curve25519Public,
+        received_nonce: xdr::Uint256,
+        we_called_remote: bool,
+    ) -> ();
+    fn new_auth_cert(
+        node_info: &LocalNode,
+        auth_public_key: &crypto::Curve25519Public,
+    ) -> xdr::AuthCert;
+    fn send_message(&mut self, message: xdr::StellarMessage);
+    fn send_header(&mut self, message_length: u32);
+    fn receive_message(
+        &mut self,
+    ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError>;
+    fn receive_header(&mut self) -> usize;
+    fn increment_message_sequence(&mut self);
+    fn set_authenticated(&mut self);
+    fn is_authenticated(&self) -> bool;
+    fn address(&self) -> &String;
+}
+
+impl Peer {
     /// Return peer instance with connection
-    pub fn new(node_info: &'a LocalNode, stream: std::net::TcpStream, address: String) -> Peer<'a> {
+    pub fn new(node_info: LocalNode, stream: std::net::TcpStream, address: String) -> Peer {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
 
@@ -56,7 +83,7 @@ impl<'a> Peer<'a> {
         public_key.copy_from_slice(node_info.key_pair.public_key().buf());
         let peer_id = xdr::PublicKey::Ed25519(xdr::Uint256(public_key));
 
-        let auth_cert = Peer::get_auth_cert(&node_info, &auth_public_key);
+        let auth_cert = Peer::new_auth_cert(&node_info, &auth_public_key);
 
         let hello = xdr::Hello {
             ledger_version: 9000 as xdr::Uint32,
@@ -71,7 +98,7 @@ impl<'a> Peer<'a> {
         };
 
         Peer {
-            node_info: &node_info,
+            node_info: node_info,
             stream: stream,
             send_message_sequence: 0 as xdr::Uint64,
             cached_auth_cert: auth_cert,
@@ -84,9 +111,12 @@ impl<'a> Peer<'a> {
             hello: hello,
             address: address,
             peer_info: Default::default(),
+            is_authenticated: false,
         }
     }
+}
 
+impl PeerInterface for Peer {
     // Connection process:
     // A wants to connect to B
     // A initiates a tcp connection to B
@@ -104,21 +134,32 @@ impl<'a> Peer<'a> {
     // If any verify step fails, the peer disconnects immediately.
     /// Start connection process to peer.
     /// More additional info: https://github.com/stellar/stellar-core/blob/ddef8bcacc5193bdd4daa07af404f1b6b1adaf39/src/overlay/OverlayManagerImpl.cpp#L28-L45
-    pub fn start_authentication(&mut self) -> () {
-        info!("[Overlay] Started authentication proccess...");
+    fn start_authentication(&mut self) -> () {
+        info!(
+            "[Overlay] Started authentication proccess peer: {}",
+            self.address
+        );
 
         self.send_message(xdr::StellarMessage::Hello(self.hello.clone()));
         match self.receive_message().unwrap() {
             xdr::AuthenticatedMessage::V0(hello) => {
                 self.handle_hello(hello.message);
             }
-            _ => unreachable!("[Overlay] Received not auth message!"),
+            _ => unreachable!(
+                "[Overlay] Received not auth message for peer {}",
+                self.address
+            ),
         }
 
         self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
         self.receive_message().unwrap(); // last auth message from remote peer
 
-        info!("[Overlay] Authentication completed!");
+        self.set_authenticated();
+
+        info!(
+            "[Overlay] Authentication completed for peer {}",
+            self.address
+        );
     }
 
     fn handle_hello(&mut self, received_hello: xdr::StellarMessage) {
@@ -193,7 +234,7 @@ impl<'a> Peer<'a> {
     }
 
     /// Make expired certicate for all connection with peers
-    fn get_auth_cert(
+    fn new_auth_cert(
         node_info: &LocalNode,
         auth_public_key: &crypto::Curve25519Public,
     ) -> xdr::AuthCert {
@@ -306,7 +347,7 @@ impl<'a> Peer<'a> {
         return message_length;
     }
 
-    pub fn receive_message(
+    fn receive_message(
         &mut self,
     ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> {
         let message_length = self.receive_header();
@@ -329,5 +370,17 @@ impl<'a> Peer<'a> {
 
     fn increment_message_sequence(&mut self) {
         self.send_message_sequence = self.send_message_sequence + 1;
+    }
+
+    fn set_authenticated(&mut self) {
+        self.is_authenticated = true;
+    }
+
+    fn is_authenticated(&self) -> bool {
+        self.is_authenticated
+    }
+
+    fn address(&self) -> &String {
+        &self.address
     }
 }
