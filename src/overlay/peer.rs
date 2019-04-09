@@ -147,7 +147,7 @@ impl PeerInterface for Peer {
             }
             _ => {
                 error!(
-                    "[Overlay] Received not auth message from peer {}. Authentication aborted",
+                    "[Overlay] Received not hello message from peer {}. Authentication aborted",
                     self.address
                 );
                 return;

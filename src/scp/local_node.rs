@@ -1,6 +1,7 @@
 use crate::crypto;
 use crate::xdr;
 
+#[derive(Clone, Debug)]
 pub struct LocalNode {
     /// Secret seed in our node for build keys
     pub secret_seed: String,
