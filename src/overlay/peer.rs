@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::{debug, error, info};
 use rand::Rng;
 use sha2::Digest;
 
@@ -145,10 +145,13 @@ impl PeerInterface for Peer {
             xdr::AuthenticatedMessage::V0(hello) => {
                 self.handle_hello(hello.message);
             }
-            _ => unreachable!(
-                "[Overlay] Received not auth message for peer {}",
-                self.address
-            ),
+            _ => {
+                error!(
+                    "[Overlay] Received not auth message from peer {}. Authentication aborted",
+                    self.address
+                );
+                return;
+            }
         }
 
         self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
@@ -168,7 +171,7 @@ impl PeerInterface for Peer {
                 self.set_remote_keys(hello.cert.pubkey, hello.nonce, true);
                 self.peer_info = hello;
             }
-            _ => unreachable!("[Overlay] Received non hello message"),
+            _ => error!("[Overlay] Received non hello message"),
         }
     }
 

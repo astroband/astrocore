@@ -78,7 +78,12 @@ impl FloodGate {
     }
 
     // send message to anyone you haven't gotten it from
-    pub fn broadcast<T: PeerInterface>(&mut self, message: xdr::StellarMessage, force: bool, peers: &mut [T]) {
+    pub fn broadcast<T: PeerInterface>(
+        &mut self,
+        message: xdr::StellarMessage,
+        force: bool,
+        peers: &mut [T],
+    ) {
         if self.m_shutting_down {
             return;
         };
@@ -219,16 +224,25 @@ mod tests {
 
     mod broadcast {
         use super::*;
-        use crate::factories::peer::{PeerMock};
+        use crate::factories::peer::PeerMock;
 
         #[test]
         fn broadcast() {
             let mut flood_gate = build_flood_gate();
             flood_gate.flood_map.clear();
 
-            let peer_mock1 = PeerMock { address: "0.0.0.0".to_string(), is_authenticated: true };
-            let peer_mock2 = PeerMock { address: "0.0.0.1".to_string(), is_authenticated: true };
-            let peer_mock3 = PeerMock { address: "0.0.0.2".to_string(), is_authenticated: true };
+            let peer_mock1 = PeerMock {
+                address: "0.0.0.0".to_string(),
+                is_authenticated: true,
+            };
+            let peer_mock2 = PeerMock {
+                address: "0.0.0.1".to_string(),
+                is_authenticated: true,
+            };
+            let peer_mock3 = PeerMock {
+                address: "0.0.0.2".to_string(),
+                is_authenticated: true,
+            };
 
             let mut peers = vec![peer_mock1, peer_mock2, peer_mock3];
 
@@ -237,9 +251,17 @@ mod tests {
 
             flood_gate.broadcast(message, false, &mut peers);
 
-            let record = flood_gate.flood_map.get(&index).expect("record should exist");
+            let record = flood_gate
+                .flood_map
+                .get(&index)
+                .expect("record should exist");
 
-            let expect_m_peers_told = vec!["self".to_string(), "0.0.0.0".to_string(), "0.0.0.1".to_string(), "0.0.0.2".to_string()];
+            let expect_m_peers_told = vec![
+                "self".to_string(),
+                "0.0.0.0".to_string(),
+                "0.0.0.1".to_string(),
+                "0.0.0.2".to_string(),
+            ];
             assert_eq!(record.m_peers_told, expect_m_peers_told);
         }
     }

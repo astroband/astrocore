@@ -1,12 +1,12 @@
-use log::{error, info};
+use log::{debug, error, info};
 use std::net::TcpStream;
 use std::time::Duration;
 
 mod crypto;
+mod factories;
 mod network;
 mod overlay;
 mod xdr;
-mod factories;
 use overlay::peer::{Peer, PeerInterface};
 mod scp;
 use scp::local_node::LocalNode;
@@ -31,7 +31,7 @@ fn main() {
             loop {
                 let message_content = peer.receive_message();
                 match message_content {
-                    Ok(msg) => info!("\n{:?}", msg),
+                    Ok(msg) => debug!("\n{:?}", msg),
                     Err(e) => error!("Cant read XDR message cause: {}", e),
                 };
             }
