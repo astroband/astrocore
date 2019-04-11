@@ -1,11 +1,11 @@
 use crate::overlay::flood_gate::*;
 use crate::overlay::message_abbr;
-use crate::xdr;
+use crate::factories::internal_xdr::build_envelope;
 
 pub fn build_flood_gate() -> FloodGate {
     let mut flood_gate = FloodGate::new();
 
-    let message = xdr::StellarMessage::default();
+    let message = build_envelope();
 
     flood_gate.flood_map.insert(
         "123".to_string(),

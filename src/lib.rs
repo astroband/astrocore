@@ -8,6 +8,7 @@ extern crate log;
 extern crate num_bigint;
 extern crate num_traits;
 extern crate sodiumoxide;
+extern crate itertools;
 
 extern crate serde;
 extern crate serde_bytes;

@@ -59,6 +59,11 @@ impl FloodGate {
             return false;
         };
 
+        match message {
+            xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {},
+            _ => return false,
+        };
+
         let index = message_abbr(message);
 
         if let Some(record) = self.flood_map.get_mut(&index) {
@@ -141,6 +146,7 @@ impl FloodRecord {
 mod tests {
     use super::*;
     use crate::factories::flood_gate::build_flood_gate;
+    use crate::factories::internal_xdr::{build_transaction, build_envelope};
 
     mod clear_below {
         use super::*;
@@ -177,7 +183,7 @@ mod tests {
             let mut flood_gate = build_flood_gate();
             let before_add = flood_gate.flood_map.len();
 
-            let message = xdr::StellarMessage::GetPeers;
+            let message = build_transaction();
 
             let result = flood_gate.add_record(&message, "192.168.5.5".to_string(), 500);
 
@@ -190,7 +196,7 @@ mod tests {
             let mut flood_gate = build_flood_gate();
             let before_add = flood_gate.flood_map.len();
 
-            let message = xdr::StellarMessage::default();
+            let message = build_envelope();
             let index = message_abbr(&message);
 
             assert_eq!(
@@ -213,7 +219,7 @@ mod tests {
             let mut flood_gate = build_flood_gate();
             flood_gate.shutdown();
             let result = flood_gate.add_record(
-                &xdr::StellarMessage::GetPeers,
+                &build_transaction(),
                 "192.168.5.5".to_string(),
                 500,
             );
@@ -246,7 +252,7 @@ mod tests {
 
             let mut peers = vec![peer_mock1, peer_mock2, peer_mock3];
 
-            let message = xdr::StellarMessage::default();
+            let message = build_transaction();
             let index = message_abbr(&message);
 
             flood_gate.broadcast(message, false, &mut peers);

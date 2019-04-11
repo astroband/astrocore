@@ -1,7 +1,7 @@
 use log::{debug, error, info};
 use rand::Rng;
 use sha2::Digest;
-
+use std::hash::{Hash, Hasher};
 use byteorder::{BigEndian, WriteBytesExt};
 use std::io::{Cursor, Read, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -12,6 +12,7 @@ use crate::xdr;
 
 use serde_xdr;
 
+#[derive(Debug)]
 pub struct Peer {
     /// Information about our node
     node_info: LocalNode,
@@ -141,8 +142,8 @@ impl PeerInterface for Peer {
         );
 
         self.send_message(xdr::StellarMessage::Hello(self.hello.clone()));
-        match self.receive_message().unwrap() {
-            xdr::AuthenticatedMessage::V0(hello) => {
+        match self.receive_message() {
+            Ok(xdr::AuthenticatedMessage::V0(hello)) => {
                 self.handle_hello(hello.message);
             }
             _ => {
@@ -155,7 +156,17 @@ impl PeerInterface for Peer {
         }
 
         self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
-        self.receive_message().unwrap(); // last auth message from remote peer
+        // last auth message from remote peer
+        match self.receive_message() {
+            Err(_) => {
+                error!(
+                    "[Overlay] Not received last auth message {}. Authentication aborted",
+                    self.address
+                );
+                return;
+            },
+            _ => {},
+        }
 
         self.set_authenticated();
 
@@ -330,7 +341,10 @@ impl PeerInterface for Peer {
     /// Get legnth of incoming message fragment
     fn receive_header(&mut self) -> usize {
         let mut header: [u8; 4] = Default::default();
-        self.stream.read_exact(&mut header).unwrap();
+        if let Err(e) = self.stream.read_exact(&mut header) {
+            error!("[Overlay] header reading error: {}", e);
+            return 0;
+        }
 
         let mut message_length: usize;
         message_length = header[0] as usize; // clear the XDR 'continuation' bit
@@ -387,3 +401,16 @@ impl PeerInterface for Peer {
         &self.address
     }
 }
+
+impl Hash for Peer {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.address.hash(state);
+    }
+}
+
+impl PartialEq for Peer {
+    fn eq(&self, other: &Peer) -> bool {
+        self.address == other.address
+    }
+}
+impl Eq for Peer {}
