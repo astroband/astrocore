@@ -1,13 +1,13 @@
 use crate::network;
+use crate::overlay::flood_gate::FloodGate;
 use crate::overlay::peer::{Peer, PeerInterface};
-use crate::overlay::flood_gate::{FloodGate};
 use crate::scp::local_node::LocalNode;
 use crate::xdr;
 use itertools::join;
 use log::{error, info};
+use std::collections::{HashMap, HashSet};
 use std::net::TcpStream;
 use std::time::Duration;
-use std::collections::{HashSet, HashMap};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /**
@@ -80,6 +80,7 @@ impl OverlayManager {
             .connect_to(get_initial_peer_address())
             .expect("Initial peer connection failed.");
 
+        // init_entry_peer()
         loop {
             let message_content = peer.receive_message();
             match message_content {
@@ -94,7 +95,7 @@ impl OverlayManager {
                         } => {
                             self.add_peers(peers_vec);
                             self.auth_all_known_peers();
-                            break
+                            break;
                         }
                         _ => info!("\n{:?}", msg),
                     };
@@ -106,7 +107,11 @@ impl OverlayManager {
 
         let mut flood_gate = FloodGate::new();
 
+        // serve_incoming_messages()
+        let mut received_messages: HashMap<String, xdr::StellarMessage> = HashMap::new();
         loop {
+            received_messages.clear();
+
             let unix_time = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
@@ -121,21 +126,27 @@ impl OverlayManager {
                         Ok(xdr::AuthenticatedMessage::V0 {
                             0:
                                 xdr::AuthenticatedMessageV0 {
-                                    message: ref msg,
-                                    ..
+                                    message: ref msg, ..
                                 },
                         }) => {
                             info!("Received message from: {}", peer_address);
-                            flood_gate.add_record(msg, peer_address.clone(), unix_time);
-                            // flood_gate.broadcast(msg.clone(), false, self.authenticated_peers_values()[..];
-                        },
+                            received_messages.insert(peer_address.clone(), msg.clone());
+                        }
                         Err(e) => {
                             error!("Cant read XDR message cause: {}", e);
                             err_flag = (true, peer_address.clone());
-                        },
+                        }
                     };
                 }
             }
+
+            for (addr, msg) in &received_messages {
+                flood_gate.add_record(&msg, addr.clone(), unix_time);
+                flood_gate.broadcast(msg.clone(), false, &mut self.authenticated_peers);
+            }
+
+            flood_gate.clear_below(unix_time);
+
             if err_flag.0 {
                 self.remove_peer_from_authenticated_list(&err_flag.1);
                 // self.restore_number_of_peers()
@@ -175,8 +186,16 @@ impl OverlayManager {
     /// in parseable format
     fn add_peers(&mut self, peers_addresses: &Vec<xdr::PeerAddress>) {
         for peer_addres in peers_addresses {
-            if let xdr::PeerAddress{ip: xdr::PeerAddressIp::Ipv4(ref addr), ..} = peer_addres {
-                self.known_peer_adresses.insert(format!("{}:{}", join(addr, "."), peer_addres.port));
+            if let xdr::PeerAddress {
+                ip: xdr::PeerAddressIp::Ipv4(ref addr),
+                ..
+            } = peer_addres
+            {
+                self.known_peer_adresses.insert(format!(
+                    "{}:{}",
+                    join(addr, "."),
+                    peer_addres.port
+                ));
             }
         }
     }
@@ -187,16 +206,16 @@ impl OverlayManager {
         let peers_address = self.known_peer_adresses.clone();
         for peer_address in peers_address {
             if self.authenticated_peers.len() > self.limit_authenticated_peers() {
-                break
+                break;
             };
 
             if self.authenticated_peers.contains_key(&peer_address) {
-                continue
+                continue;
             };
 
             let peer_result = self.connect_to(peer_address.clone());
             if let Ok(peer) = peer_result {
-                self.add_peer_to_authenticated_list(peer_address.clone(), peer);    
+                self.add_peer_to_authenticated_list(peer_address.clone(), peer);
             };
         }
     }
@@ -213,16 +232,8 @@ impl OverlayManager {
     /// Limit number of connections we can have between peers
     fn limit_authenticated_peers(&self) -> usize {
         // TODO: Get this value from config
-        5
+        4
     }
-
-    // fn authenticated_peers_values(&self) -> Vec<Peer> {
-    //     let mut values: Vec<Peer> = vec![];
-    //     for val in self.authenticated_peers.values() {
-    //         values.push(*val.clone())
-    //     };
-    //     values
-    // }
 }
 
 /// TODO: temp test address

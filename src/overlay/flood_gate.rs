@@ -17,7 +17,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
  * relate, and all flood-management information for a given ledger number
  * is purged from the FloodGate when the ledger closes.
  */
-
+#[derive(Debug)]
 pub struct FloodGate {
     /// set of received messages
     pub flood_map: HashMap<String, FloodRecord>,
@@ -25,6 +25,7 @@ pub struct FloodGate {
     pub m_shutting_down: bool,
 }
 
+#[derive(Debug)]
 pub struct FloodRecord {
     /// current ledger block
     pub m_ledger_seq: u32,
@@ -60,7 +61,7 @@ impl FloodGate {
         };
 
         match message {
-            xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {},
+            xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {}
             _ => return false,
         };
 
@@ -87,15 +88,15 @@ impl FloodGate {
         &mut self,
         message: xdr::StellarMessage,
         force: bool,
-        peers: &mut [T],
+        peers: &mut HashMap<String, T>,
     ) {
         if self.m_shutting_down {
             return;
         };
 
         let index = message_abbr(&message);
-        info!("[Overlay] broadcast {}", index);
 
+        // TODO: ledger_seq
         let unix_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -106,9 +107,13 @@ impl FloodGate {
             self.add_record(&message, "self".to_string(), unix_time);
         };
 
-        let previous_sent = &self.flood_map[&index].m_peers_told.clone();
-        let record = self.flood_map.get_mut(&index).unwrap();
-        for peer in peers {
+        let record = match self.flood_map.get_mut(&index) {
+            Some(rec) => rec,
+            None => return,
+        };
+
+        let previous_sent = record.m_peers_told.clone();
+        for peer in peers.values_mut() {
             if peer.is_authenticated() && !previous_sent.contains(peer.address()) {
                 peer.send_message(message.clone());
                 record.m_peers_told.push(peer.address().clone());
@@ -116,8 +121,8 @@ impl FloodGate {
         }
 
         info!(
-            "[Overlay] broadcast {} told {}",
-            index,
+            "[Overlay] broadcast '{:?}' told {}",
+            message,
             record.m_peers_told.len() - previous_sent.len()
         );
     }
@@ -146,7 +151,7 @@ impl FloodRecord {
 mod tests {
     use super::*;
     use crate::factories::flood_gate::build_flood_gate;
-    use crate::factories::internal_xdr::{build_transaction, build_envelope};
+    use crate::factories::internal_xdr::{build_envelope, build_transaction};
 
     mod clear_below {
         use super::*;
@@ -218,11 +223,8 @@ mod tests {
         fn with_shutdown() {
             let mut flood_gate = build_flood_gate();
             flood_gate.shutdown();
-            let result = flood_gate.add_record(
-                &build_transaction(),
-                "192.168.5.5".to_string(),
-                500,
-            );
+            let result =
+                flood_gate.add_record(&build_transaction(), "192.168.5.5".to_string(), 500);
 
             assert_eq!(result, false);
         }
@@ -250,7 +252,10 @@ mod tests {
                 is_authenticated: true,
             };
 
-            let mut peers = vec![peer_mock1, peer_mock2, peer_mock3];
+            let mut peers: HashMap<String, PeerMock> = HashMap::new();
+            peers.insert("0.0.0.0".to_string(), peer_mock1);
+            peers.insert("0.0.0.1".to_string(), peer_mock2);
+            peers.insert("0.0.0.2".to_string(), peer_mock3);
 
             let message = build_transaction();
             let index = message_abbr(&message);

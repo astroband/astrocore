@@ -1,8 +1,8 @@
+use byteorder::{BigEndian, WriteBytesExt};
 use log::{debug, error, info};
 use rand::Rng;
 use sha2::Digest;
 use std::hash::{Hash, Hasher};
-use byteorder::{BigEndian, WriteBytesExt};
 use std::io::{Cursor, Read, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -164,8 +164,8 @@ impl PeerInterface for Peer {
                     self.address
                 );
                 return;
-            },
-            _ => {},
+            }
+            _ => {}
         }
 
         self.set_authenticated();
@@ -319,7 +319,7 @@ impl PeerInterface for Peer {
 
         self.send_header(packed_auth_message.len() as u32);
 
-        self.stream.write(&packed_auth_message[..]).unwrap();
+        self.stream.write(&packed_auth_message[..]);
     }
 
     /// Send legnth of of upcoming message fragment
@@ -334,7 +334,7 @@ impl PeerInterface for Peer {
         header
             .write_u32::<BigEndian>(message_length | 0x80000000)
             .unwrap();
-        self.stream.write(&header[..]).unwrap();
+        self.stream.write(&header[..]);
     }
 
     // We always receive messages as single-fragment messages.
@@ -401,16 +401,3 @@ impl PeerInterface for Peer {
         &self.address
     }
 }
-
-impl Hash for Peer {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.address.hash(state);
-    }
-}
-
-impl PartialEq for Peer {
-    fn eq(&self, other: &Peer) -> bool {
-        self.address == other.address
-    }
-}
-impl Eq for Peer {}

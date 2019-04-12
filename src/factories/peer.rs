@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 use crate::crypto;
 use crate::overlay::peer::PeerInterface;
 use crate::scp::local_node::LocalNode;

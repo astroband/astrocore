@@ -1,6 +1,6 @@
+use crate::factories::internal_xdr::build_envelope;
 use crate::overlay::flood_gate::*;
 use crate::overlay::message_abbr;
-use crate::factories::internal_xdr::build_envelope;
 
 pub fn build_flood_gate() -> FloodGate {
     let mut flood_gate = FloodGate::new();
