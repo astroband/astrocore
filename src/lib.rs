@@ -5,6 +5,7 @@ extern crate byteorder;
 extern crate crc16;
 extern crate env_logger;
 extern crate itertools;
+extern crate lazy_static;
 extern crate log;
 extern crate num_bigint;
 extern crate num_traits;
@@ -14,9 +15,11 @@ extern crate serde;
 extern crate serde_bytes;
 extern crate serde_derive;
 extern crate serde_xdr;
+extern crate toml;
 
 extern crate simulacrum;
 
+pub mod config;
 pub mod crypto;
 pub mod factories;
 pub mod network;

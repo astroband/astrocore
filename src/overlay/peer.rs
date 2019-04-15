@@ -2,20 +2,17 @@ use byteorder::{BigEndian, WriteBytesExt};
 use log::{debug, error, info};
 use rand::Rng;
 use sha2::Digest;
-use std::hash::{Hash, Hasher};
 use std::io::{Cursor, Read, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::crypto;
-use crate::scp::local_node::LocalNode;
+use crate::scp::local_node::{LocalNode, LOCAL_NODE};
 use crate::xdr;
 
 use serde_xdr;
 
 #[derive(Debug)]
 pub struct Peer {
-    /// Information about our node
-    node_info: LocalNode,
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
     /// Current message sequence position.
@@ -73,7 +70,7 @@ pub trait PeerInterface {
 
 impl Peer {
     /// Return peer instance with connection
-    pub fn new(node_info: LocalNode, stream: std::net::TcpStream, address: String) -> Peer {
+    pub fn new(stream: std::net::TcpStream, address: String) -> Peer {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
 
@@ -81,16 +78,16 @@ impl Peer {
         let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
 
         let mut public_key: [u8; 32] = Default::default();
-        public_key.copy_from_slice(node_info.key_pair.public_key().buf());
+        public_key.copy_from_slice(LOCAL_NODE.key_pair.public_key().buf());
         let peer_id = xdr::PublicKey::Ed25519(xdr::Uint256(public_key));
 
-        let auth_cert = Peer::new_auth_cert(&node_info, &auth_public_key);
+        let auth_cert = Peer::new_auth_cert(&LOCAL_NODE, &auth_public_key);
 
         let hello = xdr::Hello {
             ledger_version: 9000 as xdr::Uint32,
             overlay_version: 9000 as xdr::Uint32,
             overlay_min_version: 0 as xdr::Uint32,
-            network_id: node_info.network_id,
+            network_id: LOCAL_NODE.network_id().to_owned(),
             version_str: String::from("stellar-core-rust[alpha-0.0]"),
             listening_port: 11625,
             peer_id: peer_id,
@@ -99,7 +96,6 @@ impl Peer {
         };
 
         Peer {
-            node_info: node_info,
             stream: stream,
             send_message_sequence: 0 as xdr::Uint64,
             cached_auth_cert: auth_cert,

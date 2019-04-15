@@ -1,7 +1,5 @@
-use crate::network;
 use crate::overlay::flood_gate::FloodGate;
 use crate::overlay::peer::{Peer, PeerInterface};
-use crate::scp::local_node::LocalNode;
 use crate::xdr;
 use itertools::join;
 use log::{error, info};
@@ -49,10 +47,7 @@ pub struct OverlayManager {
     known_peer_adresses: HashSet<String>,
     authenticated_peers: HashMap<String, Peer>,
     pending_peers: HashSet<String>,
-    local_node: LocalNode,
 }
-
-const SECRET_TEST_SEED: &str = "SATKBWSRLPHGM2FKMLZ4QNH64XYKP7J2O6U5QNFBJHYEXDSHN75R5MVE";
 
 #[derive(Debug)]
 pub enum OverlayError {
@@ -63,14 +58,10 @@ pub enum OverlayError {
 
 impl OverlayManager {
     pub fn new() -> Self {
-        let seed = String::from(SECRET_TEST_SEED);
-        let node = LocalNode::new(seed, &network::Network::test_network().network_id());
-
         OverlayManager {
             known_peer_adresses: HashSet::new(),
             authenticated_peers: HashMap::new(),
             pending_peers: HashSet::new(),
-            local_node: node,
         }
     }
 
@@ -166,7 +157,7 @@ impl OverlayManager {
                 info!("Successfully connected to peer {}", address);
                 let cloned_stream = stream.try_clone().expect("clone failed...");
 
-                let mut peer = Peer::new(self.local_node.clone(), cloned_stream, peer_address);
+                let mut peer = Peer::new(cloned_stream, peer_address);
                 peer.start_authentication();
 
                 if peer.is_authenticated() {

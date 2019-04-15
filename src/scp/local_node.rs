@@ -1,5 +1,16 @@
+use crate::config::CONFIG;
 use crate::crypto;
+use crate::network::Network;
 use crate::xdr;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    #[derive(Debug)]
+    pub static ref LOCAL_NODE: LocalNode = LocalNode::new(
+        CONFIG.seed().to_owned(),
+        &Network::network().network_id(),
+    );
+}
 
 #[derive(Clone, Debug)]
 pub struct LocalNode {
@@ -24,5 +35,17 @@ impl LocalNode {
             key_pair: key_pair,
             network_id: xdr::Hash(network_id),
         }
+    }
+
+    pub fn network_id(&self) -> &xdr::Hash {
+        &self.network_id
+    }
+
+    pub fn secret_seed(&self) -> &String {
+        &self.secret_seed
+    }
+
+    pub fn key_pair(&self) -> &crypto::KeyPair {
+        &self.key_pair
     }
 }
