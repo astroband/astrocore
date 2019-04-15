@@ -1,8 +1,8 @@
-use log::{debug, info};
+use byteorder::{BigEndian, WriteBytesExt};
+use log::{debug, error, info};
 use rand::Rng;
 use sha2::Digest;
-
-use byteorder::{BigEndian, WriteBytesExt};
+use std::hash::{Hash, Hasher};
 use std::io::{Cursor, Read, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -12,6 +12,7 @@ use crate::xdr;
 
 use serde_xdr;
 
+#[derive(Debug)]
 pub struct Peer {
     /// Information about our node
     node_info: LocalNode,
@@ -141,18 +142,31 @@ impl PeerInterface for Peer {
         );
 
         self.send_message(xdr::StellarMessage::Hello(self.hello.clone()));
-        match self.receive_message().unwrap() {
-            xdr::AuthenticatedMessage::V0(hello) => {
+        match self.receive_message() {
+            Ok(xdr::AuthenticatedMessage::V0(hello)) => {
                 self.handle_hello(hello.message);
             }
-            _ => unreachable!(
-                "[Overlay] Received not auth message for peer {}",
-                self.address
-            ),
+            _ => {
+                error!(
+                    "[Overlay] Received not hello message from peer {}. Authentication aborted",
+                    self.address
+                );
+                return;
+            }
         }
 
         self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
-        self.receive_message().unwrap(); // last auth message from remote peer
+        // last auth message from remote peer
+        match self.receive_message() {
+            Err(_) => {
+                error!(
+                    "[Overlay] Not received last auth message {}. Authentication aborted",
+                    self.address
+                );
+                return;
+            }
+            _ => {}
+        }
 
         self.set_authenticated();
 
@@ -168,7 +182,7 @@ impl PeerInterface for Peer {
                 self.set_remote_keys(hello.cert.pubkey, hello.nonce, true);
                 self.peer_info = hello;
             }
-            _ => unreachable!("[Overlay] Received non hello message"),
+            _ => error!("[Overlay] Received non hello message"),
         }
     }
 
@@ -305,7 +319,7 @@ impl PeerInterface for Peer {
 
         self.send_header(packed_auth_message.len() as u32);
 
-        self.stream.write(&packed_auth_message[..]).unwrap();
+        self.stream.write(&packed_auth_message[..]);
     }
 
     /// Send legnth of of upcoming message fragment
@@ -320,14 +334,17 @@ impl PeerInterface for Peer {
         header
             .write_u32::<BigEndian>(message_length | 0x80000000)
             .unwrap();
-        self.stream.write(&header[..]).unwrap();
+        self.stream.write(&header[..]);
     }
 
     // We always receive messages as single-fragment messages.
     /// Get legnth of incoming message fragment
     fn receive_header(&mut self) -> usize {
         let mut header: [u8; 4] = Default::default();
-        self.stream.read_exact(&mut header).unwrap();
+        if let Err(e) = self.stream.read_exact(&mut header) {
+            error!("[Overlay] header reading error: {}", e);
+            return 0;
+        }
 
         let mut message_length: usize;
         message_length = header[0] as usize; // clear the XDR 'continuation' bit

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub mod external_xdr;
 pub mod external_xdr_stub;
 pub mod flood_gate;

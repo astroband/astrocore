@@ -85,3 +85,11 @@ pub fn build_authenticated_message_v0() -> xdr::AuthenticatedMessageV0 {
 pub fn build_authenticated_message() -> xdr::AuthenticatedMessage {
     xdr::AuthenticatedMessage::V0(build_authenticated_message_v0())
 }
+
+pub fn build_transaction() -> xdr::StellarMessage {
+    xdr::StellarMessage::Transaction(xdr::TransactionEnvelope::default())
+}
+
+pub fn build_envelope() -> xdr::StellarMessage {
+    xdr::StellarMessage::Envelope(xdr::ScpEnvelope::default())
+}

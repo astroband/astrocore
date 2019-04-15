@@ -4,6 +4,7 @@ extern crate bigdecimal;
 extern crate byteorder;
 extern crate crc16;
 extern crate env_logger;
+extern crate itertools;
 extern crate log;
 extern crate num_bigint;
 extern crate num_traits;

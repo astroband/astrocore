@@ -1,4 +1,5 @@
 pub mod flood_gate;
+pub mod overlay_manager;
 pub mod peer;
 
 use crate::crypto;
