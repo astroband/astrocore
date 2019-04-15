@@ -264,16 +264,16 @@ mod tests {
 
             let record = flood_gate
                 .flood_map
-                .get(&index)
+                .get_mut(&index)
                 .expect("record should exist");
 
-            let expect_m_peers_told = vec![
+            let mut expect_m_peers_told = vec![
                 "self".to_string(),
                 "0.0.0.0".to_string(),
                 "0.0.0.1".to_string(),
                 "0.0.0.2".to_string(),
             ];
-            assert_eq!(record.m_peers_told, expect_m_peers_told);
+            assert_eq!(record.m_peers_told.sort(), expect_m_peers_told.sort());
         }
     }
 
