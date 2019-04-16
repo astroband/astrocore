@@ -1,5 +1,6 @@
 mod config;
 mod crypto;
+mod database;
 mod factories;
 mod network;
 mod overlay;
