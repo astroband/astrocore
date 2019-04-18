@@ -12,13 +12,13 @@ lazy_static! {
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    database_url: String,
     network: String,
     local_node: LocalNode,
     initial_peers: Vec<InitialPeer>,
     public_passphrase: String,
     test_passphrase: String,
     seed: String,
+    db_pool: u32,
 }
 
 impl Config {
@@ -53,8 +53,8 @@ impl Config {
         &self.public_passphrase
     }
 
-    pub fn database_url(&self) -> &String {
-        &self.database_url
+    pub fn db_pool(&self) -> &u32 {
+        &self.db_pool
     }
 }
 

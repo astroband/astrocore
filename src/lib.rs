@@ -13,6 +13,7 @@ extern crate env_logger;
 extern crate log;
 
 // database
+#[macro_use]
 extern crate diesel;
 extern crate dotenv;
 
@@ -36,5 +37,6 @@ pub mod database;
 pub mod factories;
 pub mod network;
 pub mod overlay;
+pub mod schema;
 pub mod scp;
 pub mod xdr;

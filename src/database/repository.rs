@@ -1,24 +1,29 @@
-use crate::config::CONFIG;
-use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
-use lazy_static::lazy_static;
-use log::info;
+use super::{
+    dotenv, env, info, lazy_static, ConnectionManager, PgConnection, Pool, PooledConnection, CONFIG,
+};
+
+lazy_static! {
+    pub static ref DB: Pool<ConnectionManager<PgConnection>> = establish_connection();
+}
 
 fn establish_connection() -> Pool<ConnectionManager<PgConnection>> {
-    let manager = ConnectionManager::<PgConnection>::new(CONFIG.database_url().to_owned());
-    let pool = Pool::builder().build(manager).expect(&format!(
-        "Failed to create pool to {}",
-        CONFIG.database_url()
-    ));
+    dotenv().ok();
 
-    info!(
-        "Connection to database established {}",
-        CONFIG.database_url()
-    );
+    let database_url = env::var("DATABASE_URL").expect("[DB] DATABASE_URL must be set");
+
+    let manager = ConnectionManager::<PgConnection>::new(database_url.to_owned());
+    let pool = Pool::builder()
+        .max_size(*CONFIG.db_pool())
+        .build(manager)
+        .expect(&format!(
+            "[DB] Failed to create pool. Check your db settings"
+        ));
+
+    info!("[DB] Connection to database established");
 
     pool
 }
 
-lazy_static! {
-    pub static ref DB: Pool<ConnectionManager<PgConnection>> = establish_connection();
+pub(crate) fn db_conn() -> PooledConnection<ConnectionManager<PgConnection>> {
+    DB.get().unwrap()
 }
