@@ -1,12 +1,14 @@
-use crate::overlay::flood_gate::FloodGate;
-use crate::overlay::peer::{Peer, PeerInterface};
-use crate::xdr;
-use itertools::join;
-use log::{error, info};
+use super::{
+    error,
+    flood_gate::FloodGate,
+    info,
+    itertools::join,
+    peer::{Peer, PeerInterface},
+    xdr,
+};
 use std::collections::{HashMap, HashSet};
 use std::net::TcpStream;
-use std::time::Duration;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /**
  * OverlayManager maintains a virtual broadcast network, consisting of a set of

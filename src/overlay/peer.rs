@@ -1,15 +1,9 @@
-use byteorder::{BigEndian, WriteBytesExt};
-use log::{debug, error, info};
-use rand::Rng;
-use sha2::Digest;
+use super::{
+    crypto, debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng,
+    WriteBytesExt, LOCAL_NODE,
+};
 use std::io::{Cursor, Read, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
-
-use crate::crypto;
-use crate::scp::local_node::{LocalNode, LOCAL_NODE};
-use crate::xdr;
-
-use serde_xdr;
 
 #[derive(Debug)]
 pub struct Peer {

@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate diesel;
 
-pub mod xdr;
 pub mod factories;
+pub mod xdr;
 
 pub(crate) mod config;
 pub(crate) mod crypto;

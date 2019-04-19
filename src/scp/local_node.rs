@@ -1,8 +1,4 @@
-use crate::config::CONFIG;
-use crate::crypto;
-use crate::network::Network;
-use crate::xdr;
-use lazy_static::lazy_static;
+use super::{crypto, lazy_static, xdr, Network, CONFIG};
 
 lazy_static! {
     #[derive(Debug)]
