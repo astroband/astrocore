@@ -1,5 +1,4 @@
-use super::super::db_conn;
-use super::super::schema::peers;
+use super::{db_conn, schema::peers};
 use diesel::prelude::*;
 
 #[derive(Queryable, Debug)]
