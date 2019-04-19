@@ -1,15 +1,7 @@
 #![allow(dead_code)]
 
+use crate::config::CONFIG;
 use crate::crypto;
-
-const PUBLIC_PASSPHRASE: &str = "Public Global Stellar Network ; September 2015";
-const TEST_PASSPHRASE: &str = "Test SDF Network ; September 2015";
-
-pub const TEST_PEERS: [&str; 3] = [
-    "core-testnet1.stellar.org:11625",
-    "core-testnet2.stellar.org:11625",
-    "core-testnet3.stellar.org:11625",
-];
 
 /// A Stellar Network.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,14 +15,24 @@ impl Network {
         Network { passphrase }
     }
 
+    pub fn network() -> Network {
+        match CONFIG.network().as_str() {
+            "test" => Self::test_network(),
+            "public" => Self::public_network(),
+            _ => unreachable!(
+                "Unknown network. Check config file, network key should be public or test"
+            ),
+        }
+    }
+
     /// Create new network with the same passphrase as SDF public network.
     pub fn public_network() -> Network {
-        Self::new(PUBLIC_PASSPHRASE.to_string())
+        Self::new(CONFIG.public_passphrase().to_owned())
     }
 
     /// Create new network with the same passphrase as SDF test network.
     pub fn test_network() -> Network {
-        Self::new(TEST_PASSPHRASE.to_string())
+        Self::new(CONFIG.test_passphrase().to_owned())
     }
 
     /// Return the network passphrase.

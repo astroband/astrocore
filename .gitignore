@@ -4,3 +4,4 @@
 xdr-test
 .byebug_history
 Gemfile.lock
+.env

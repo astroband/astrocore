@@ -1,0 +1,21 @@
+network = "test"
+seed = "SATKBWSRLPHGM2FKMLZ4QNH64XYKP7J2O6U5QNFBJHYEXDSHN75R5MVE"
+test_passphrase = "Test SDF Network ; September 2015"
+public_passphrase = "Public Global Stellar Network ; September 2015"
+db_pool = 4
+
+[local_node]
+ip = "localhost"
+port = 11625
+
+[[initial_peers]]
+ip = "54.161.82.181"
+port = 11625
+
+[[initial_peers]]
+ip = "54.211.174.177"
+port = 11625
+
+[[initial_peers]]
+ip = "54.160.175.7"
+port = 11625

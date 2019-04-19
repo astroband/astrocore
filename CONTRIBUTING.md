@@ -11,9 +11,16 @@ sodiumoxide libs in your OS
 
 1. Fork repo
 2. git clone <forked_repo>
-3. run commands:
+3. Change `.env.example` to `.env` and change DATABASE_URL
+3. Install diesel and run migrations:
+```
+cargo install diesel_cli --no-default-features --features postgres
+
+diesel migration run
+```
+5. Run astrocore:
 ```bash
 RUST_LOG="astrocore=debug" RUSTFLAGS=-Awarnings cargo run
 ```
-4. Make changes
-5. Push your changes in repo
+6. Make changes
+7. Push your changes in repo
