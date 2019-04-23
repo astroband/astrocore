@@ -7,9 +7,9 @@ use super::{
     xdr, CONFIG,
 };
 use std::collections::{HashMap, HashSet};
-use std::net::TcpStream;
+use std::net::{TcpStream, TcpListener};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
+use std::thread;
 /**
  * OverlayManager maintains a virtual broadcast network, consisting of a set of
  * remote TCP peers (TCPPeer), a mechanism for flooding messages to all peers
@@ -74,6 +74,13 @@ impl OverlayManager {
         let mut flood_gate = FloodGate::new();
         let mut received_messages: HashMap<String, xdr::StellarMessage> = HashMap::new();
         let mut failed_peers: HashSet<String> = HashSet::new();
+
+        info!("Try to make local connection...");
+        thread::spawn(move|| {
+            handle_clients()
+        });
+        info!("Local thread spawned!");
+
         loop {
             self.auth_all_known_peers();
             info!("Auth peers: {:?}", self.authenticated_peers.keys());
@@ -250,4 +257,19 @@ fn unix_time() -> u32 {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs() as u32
+}
+
+fn handle_clients() {
+    let listener = TcpListener::bind("127.0.0.1:11625").unwrap();
+
+    for stream in listener.incoming() {
+        match stream {
+            Ok(stream) => {
+                let mut local_peer = Peer::new(stream, "127.0.0.1:11625".to_string());
+                info!("INCOMING MESSAGE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                info!("Received message from: {}\n {:?}", local_peer.peer_addr(), local_peer.receive_message());
+            }
+            Err(e) => { error!("CONNECTION FAILED, cause: {:?}", e); }
+        }
+    }
 }

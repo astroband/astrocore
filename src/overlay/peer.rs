@@ -105,6 +105,10 @@ impl Peer {
             is_authenticated: false,
         }
     }
+
+    pub fn peer_addr(&self) -> String {
+        self.stream.peer_addr().unwrap().ip().to_string()
+    }
 }
 
 impl PeerInterface for Peer {
