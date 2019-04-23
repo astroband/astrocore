@@ -1,2 +1,2 @@
 pub(crate) mod peer;
-pub(crate) use super::{db_conn, schema};
+pub(crate) use super::{db_conn, schema, CONFIG};

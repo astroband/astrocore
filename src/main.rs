@@ -14,5 +14,6 @@ use overlay::overlay_manager::OverlayManager;
 
 fn main() {
     env_logger::init();
+    database::init();
     OverlayManager::new().start();
 }

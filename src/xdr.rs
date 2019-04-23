@@ -3844,3 +3844,10 @@ pub struct ScpQuorumSet {
 }
 
 /* Bottom matter */
+
+impl From<AuthenticatedMessage> for StellarMessage {
+    fn from(item: AuthenticatedMessage) -> Self {
+        let AuthenticatedMessage::V0(msg) = item;
+        msg.message
+    }
+}

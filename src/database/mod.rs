@@ -12,3 +12,7 @@ pub(crate) use dotenv::dotenv;
 pub(crate) use lazy_static::lazy_static;
 pub(crate) use log::info;
 pub(crate) use std::env;
+
+pub(crate) fn init() {
+    Peer::load_initial_peers();
+}

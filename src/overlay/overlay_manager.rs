@@ -1,10 +1,10 @@
 use super::{
-    error,
+    database, error,
     flood_gate::FloodGate,
     info,
     itertools::join,
     peer::{Peer, PeerInterface},
-    xdr,
+    xdr, CONFIG,
 };
 use std::collections::{HashMap, HashSet};
 use std::net::TcpStream;
@@ -69,80 +69,45 @@ impl OverlayManager {
 
     /// start main overlay manager process
     pub fn start(&mut self) {
-        let mut peer = self
-            .connect_to(get_initial_peer_address())
-            .expect("Initial peer connection failed.");
-
-        // init_entry_peer()
-        loop {
-            let message_content = peer.receive_message();
-            match message_content {
-                Ok(msg) => {
-                    match msg {
-                        xdr::AuthenticatedMessage::V0 {
-                            0:
-                                xdr::AuthenticatedMessageV0 {
-                                    message: xdr::StellarMessage::Peers(ref peers_vec),
-                                    ..
-                                },
-                        } => {
-                            self.add_peers(peers_vec);
-                            self.auth_all_known_peers();
-                            break;
-                        }
-                        _ => info!("\n{:?}", msg),
-                    };
-                }
-                Err(e) => error!("Cant read XDR message cause: {}", e),
-            };
-        }
-        self.add_peer_to_authenticated_list(get_initial_peer_address(), peer);
+        self.populate_known_peers_from_db();
 
         let mut flood_gate = FloodGate::new();
-
-        // serve_incoming_messages()
         let mut received_messages: HashMap<String, xdr::StellarMessage> = HashMap::new();
+        let mut failed_peers: HashSet<String> = HashSet::new();
         loop {
-            received_messages.clear();
-
-            let unix_time = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs() as u32;
-
-            let mut err_flag: (bool, String) = (false, String::from(""));
+            self.auth_all_known_peers();
             info!("Auth peers: {:?}", self.authenticated_peers.keys());
-            {
-                for (peer_address, peer) in &mut self.authenticated_peers {
-                    let message_content = peer.receive_message();
-                    match message_content {
-                        Ok(xdr::AuthenticatedMessage::V0 {
-                            0:
-                                xdr::AuthenticatedMessageV0 {
-                                    message: ref msg, ..
-                                },
-                        }) => {
-                            info!("Received message from: {}", peer_address);
-                            received_messages.insert(peer_address.clone(), msg.clone());
-                        }
-                        Err(e) => {
-                            error!("Cant read XDR message cause: {}", e);
-                            err_flag = (true, peer_address.clone());
-                        }
-                    };
+
+            for (peer_address, peer) in &mut self.authenticated_peers {
+                match peer.receive_message() {
+                    Ok(msg) => {
+                        let message: xdr::StellarMessage = msg.into();
+                        info!("Received message from: {}", peer_address);
+                        received_messages.insert(peer_address.clone(), message.clone());
+                    }
+                    Err(e) => {
+                        error!("Cant read XDR message cause: {}", e);
+                        failed_peers.insert(peer_address.clone());
+                    }
+                };
+            }
+
+            let current_ledger = unix_time();
+            for (addr, msg) in received_messages.drain().take(1) {
+                match msg {
+                    xdr::StellarMessage::Peers(ref message) => self.add_known_peers(message),
+                    xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {
+                        flood_gate.add_record(&msg, addr.clone(), current_ledger);
+                        flood_gate.broadcast(msg.clone(), false, &mut self.authenticated_peers);
+                    }
+                    _ => (),
                 }
             }
 
-            for (addr, msg) in &received_messages {
-                flood_gate.add_record(&msg, addr.clone(), unix_time);
-                flood_gate.broadcast(msg.clone(), false, &mut self.authenticated_peers);
-            }
+            flood_gate.clear_below(current_ledger);
 
-            flood_gate.clear_below(unix_time);
-
-            if err_flag.0 {
-                self.remove_peer_from_authenticated_list(&err_flag.1);
-                // self.restore_number_of_peers()
+            for addr in failed_peers.drain().take(1) {
+                self.remove_peer_from_authenticated_list(&addr);
             }
         }
     }
@@ -177,59 +142,112 @@ impl OverlayManager {
 
     /// Accept llist of xdr::PeerAddress and move each of them in known_peer_adresses
     /// in parseable format
-    fn add_peers(&mut self, peers_addresses: &Vec<xdr::PeerAddress>) {
+    fn add_known_peers(&mut self, peers_addresses: &Vec<xdr::PeerAddress>) {
         for peer_addres in peers_addresses {
             if let xdr::PeerAddress {
                 ip: xdr::PeerAddressIp::Ipv4(ref addr),
                 ..
             } = peer_addres
             {
-                self.known_peer_adresses.insert(format!(
-                    "{}:{}",
-                    join(addr, "."),
-                    peer_addres.port
-                ));
+                self.add_known_peer(format!("{}:{}", join(addr, "."), peer_addres.port));
             }
         }
+    }
+
+    /// Add single peer address to known_peer_adresses list
+    fn add_known_peer(&mut self, peer_address: String) {
+        if self.is_new_peer(&peer_address) {
+            self.known_peer_adresses.insert(peer_address);
+        }
+    }
+
+    /// Remove single peer address from known_peer_adresses list
+    fn remove_known_peer(&mut self, peer_address: &String) {
+        self.known_peer_adresses.remove(peer_address);
+    }
+
+    /// Add single peer address to pending_peers list
+    fn add_pending_peer(&mut self, peer_address: String) {
+        self.pending_peers.insert(peer_address);
+    }
+
+    /// Remove single peer address from pending_peers list
+    fn remove_pending_peer(&mut self, peer_address: &String) {
+        self.pending_peers.remove(peer_address);
+    }
+
+    fn is_new_peer(&self, peer_address: &String) -> bool {
+        !self.is_peer_exist(peer_address)
+    }
+
+    fn is_peer_exist(&self, peer_address: &String) -> bool {
+        self.known_peer_adresses.contains(peer_address)
+            || self.authenticated_peers.contains_key(peer_address)
+            || self.pending_peers.contains(peer_address)
     }
 
     /// Iterate through known_peer_adresses and trying to a authenticate each.
     /// If authentication procees is Ok(), so move new peer in list of authenticated_peers
     fn auth_all_known_peers(&mut self) {
+        if self.reached_limit_of_authenticated_peers() {
+            return;
+        };
+
         let peers_address = self.known_peer_adresses.clone();
         for peer_address in peers_address {
-            if self.authenticated_peers.len() > self.limit_authenticated_peers() {
-                break;
-            };
-
             if self.authenticated_peers.contains_key(&peer_address) {
                 continue;
             };
 
-            let peer_result = self.connect_to(peer_address.clone());
+            let peer_result = self.connect_to(peer_address.to_owned());
             if let Ok(peer) = peer_result {
-                self.add_peer_to_authenticated_list(peer_address.clone(), peer);
+                self.move_peer_to_authenticated_list(peer_address.to_owned(), peer);
+            } else {
+                self.move_peer_to_pending_list(peer_address.to_owned());
+            };
+
+            if self.reached_limit_of_authenticated_peers() {
+                break;
             };
         }
     }
 
-    /// Add new peer to authenticated_peers list
-    fn add_peer_to_authenticated_list(&mut self, peers_addresses: String, peer: Peer) {
+    /// Move peer to authenticated_peers list
+    fn move_peer_to_authenticated_list(&mut self, peers_addresses: String, peer: Peer) {
+        self.remove_known_peer(&peers_addresses);
         self.authenticated_peers.insert(peers_addresses, peer);
     }
 
+    /// Remove single peer address from authenticated_peers list
     fn remove_peer_from_authenticated_list(&mut self, peers_addresses: &String) {
         self.authenticated_peers.remove(peers_addresses);
     }
 
     /// Limit number of connections we can have between peers
     fn limit_authenticated_peers(&self) -> usize {
-        // TODO: Get this value from config
-        4
+        *CONFIG.peers_limit() as usize
+    }
+
+    fn populate_known_peers_from_db(&mut self) {
+        let peers = database::Peer::all().expect("[Overlay Manager] Can`t recreate initial peer adresses. Check your database connection");
+        for peer in peers {
+            self.add_known_peer(peer.address().to_owned());
+        }
+    }
+
+    fn move_peer_to_pending_list(&mut self, peers_address: String) {
+        self.remove_known_peer(&peers_address);
+    }
+
+    fn reached_limit_of_authenticated_peers(&self) -> bool {
+        self.authenticated_peers.len() >= self.limit_authenticated_peers()
     }
 }
 
-/// TODO: temp test address
-fn get_initial_peer_address() -> String {
-    String::from("54.160.175.7:11625")
+// stub for current ledger value
+fn unix_time() -> u32 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as u32
 }

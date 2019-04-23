@@ -19,6 +19,7 @@ pub struct Config {
     test_passphrase: String,
     seed: String,
     db_pool: u32,
+    peers_limit: u32,
 }
 
 impl Config {
@@ -55,6 +56,10 @@ impl Config {
 
     pub fn db_pool(&self) -> &u32 {
         &self.db_pool
+    }
+
+    pub fn peers_limit(&self) -> &u32 {
+        &self.peers_limit
     }
 }
 
