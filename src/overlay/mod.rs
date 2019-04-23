@@ -3,7 +3,8 @@ pub(crate) mod overlay_manager;
 pub(crate) mod peer;
 
 pub(crate) use crate::{
-    crypto,
+    config::CONFIG,
+    crypto, database,
     scp::local_node::{LocalNode, LOCAL_NODE},
     xdr,
 };
