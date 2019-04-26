@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub(crate) mod local_node;
 
 pub(crate) use crate::config::CONFIG;

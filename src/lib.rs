@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate diesel;
 
+#[macro_use]
+extern crate crossbeam_channel;
+
 pub mod factories;
 pub mod xdr;
 

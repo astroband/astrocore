@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub use self::models::peer::Peer;
 
 mod models;

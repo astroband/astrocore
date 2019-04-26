@@ -1,4 +1,5 @@
 use super::{
+    crossbeam_channel::{unbounded, Receiver, Sender},
     database, error,
     flood_gate::FloodGate,
     info,
@@ -7,9 +8,9 @@ use super::{
     xdr, CONFIG,
 };
 use std::collections::{HashMap, HashSet};
-use std::net::{TcpStream, TcpListener};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::net::{TcpListener, TcpStream};
 use std::thread;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 /**
  * OverlayManager maintains a virtual broadcast network, consisting of a set of
  * remote TCP peers (TCPPeer), a mechanism for flooding messages to all peers
@@ -58,8 +59,16 @@ pub enum OverlayError {
     InvalidPeerAddress,
 }
 
+pub enum OverlayMessages {
+    NewConnection(String),
+    NewPeer(String),
+    PeerFailure(String),
+    NewStellarMessage(String, xdr::StellarMessage),
+}
+
 impl OverlayManager {
     pub fn new() -> Self {
+        //  RWlock
         OverlayManager {
             known_peer_adresses: HashSet::new(),
             authenticated_peers: HashMap::new(),
@@ -69,17 +78,16 @@ impl OverlayManager {
 
     /// start main overlay manager process
     pub fn start(&mut self) {
+        let (overlay_sender_ch, overlay_receive_ch) =
+            crossbeam_channel::unbounded::<OverlayMessages>();
+
+        thread::spawn(move || handle_clients(overlay_sender_ch.clone()));
+
         self.populate_known_peers_from_db();
 
         let mut flood_gate = FloodGate::new();
         let mut received_messages: HashMap<String, xdr::StellarMessage> = HashMap::new();
         let mut failed_peers: HashSet<String> = HashSet::new();
-
-        info!("Try to make local connection...");
-        thread::spawn(move|| {
-            handle_clients()
-        });
-        info!("Local thread spawned!");
 
         loop {
             self.auth_all_known_peers();
@@ -120,28 +128,24 @@ impl OverlayManager {
     }
 
     /// Accept peer_address in parseable format and trying to start_authenticate new connection
-    fn connect_to(&self, peer_address: String) -> Result<Peer, OverlayError> {
-        let address = match peer_address.parse() {
-            Ok(addr) => addr,
-            Err(_) => return Err(OverlayError::InvalidPeerAddress),
-        };
-
-        match TcpStream::connect_timeout(&address, Duration::new(2, 0)) {
+    fn connect_to(&self, peer_address: &String) -> Result<Ok, OverlayError> {
+        match TcpStream::connect_timeout(peer_address.parse(), Duration::new(2, 0)) {
             Ok(stream) => {
-                info!("Successfully connected to peer {}", address);
-                let cloned_stream = stream.try_clone().expect("clone failed...");
+                launch_new_peer(stream, overlay_ch.clone(), true);
+                // info!("Successfully connected to peer {}", address);
+                // let cloned_stream = stream.try_clone().expect("clone failed...");
 
-                let mut peer = Peer::new(cloned_stream, peer_address);
-                peer.start_authentication();
+                // let mut peer = Peer::new(cloned_stream, peer_address);
+                // peer.start_authentication(true);
 
-                if peer.is_authenticated() {
-                    return Ok(peer);
-                } else {
-                    return Err(OverlayError::AuthFail);
-                }
+                // if peer.is_authenticated() {
+                //     return Ok(peer);
+                // } else {
+                //     return Err(OverlayError::AuthFail);
+                // }
             }
             Err(e) => {
-                error!("Failed to connect: {}, cause {}", address, e);
+                info!("Failed to connect: {}, cause {}", peer_address, e);
                 return Err(OverlayError::ConnectionFail);
             }
         }
@@ -163,6 +167,10 @@ impl OverlayManager {
 
     /// Add single peer address to known_peer_adresses list
     fn add_known_peer(&mut self, peer_address: String) {
+        if let Err(_) = peer_address.parse() {
+            return;
+        }
+
         if self.is_new_peer(&peer_address) {
             self.known_peer_adresses.insert(peer_address);
         }
@@ -206,16 +214,16 @@ impl OverlayManager {
                 continue;
             };
 
-            let peer_result = self.connect_to(peer_address.to_owned());
-            if let Ok(peer) = peer_result {
-                self.move_peer_to_authenticated_list(peer_address.to_owned(), peer);
-            } else {
-                self.move_peer_to_pending_list(peer_address.to_owned());
-            };
+            let peer_result = self.connect_to(&peer_address);
+            // if let Ok(peer) = peer_result {
+            //     self.move_peer_to_authenticated_list(peer_address.to_owned(), peer);
+            // } else {
+            //     self.move_peer_to_pending_list(peer_address.to_owned());
+            // };
 
-            if self.reached_limit_of_authenticated_peers() {
-                break;
-            };
+            // if self.reached_limit_of_authenticated_peers() {
+            //     break;
+            // };
         }
     }
 
@@ -259,17 +267,37 @@ fn unix_time() -> u32 {
         .as_secs() as u32
 }
 
-fn handle_clients() {
-    let listener = TcpListener::bind("127.0.0.1:11625").unwrap();
-
+fn handle_clients(overlay_ch: crossbeam_channel::Sender<OverlayMessages>) {
+    let listener = TcpListener::bind(CONFIG.local_node().address())
+        .expect("Unable to send on OverlayManager channel");;
     for stream in listener.incoming() {
         match stream {
-            Ok(stream) => {
-                let mut local_peer = Peer::new(stream, "127.0.0.1:11625".to_string());
-                info!("INCOMING MESSAGE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-                info!("Received message from: {}\n {:?}", local_peer.peer_addr(), local_peer.receive_message());
+            Ok(stream) => launch_new_peer(stream, overlay_ch.clone(), false),
+            Err(e) => {
+                error!("CONNECTION FAILED, cause: {:?}", e);
             }
-            Err(e) => { error!("CONNECTION FAILED, cause: {:?}", e); }
         }
     }
+    unreachable!();
+}
+
+fn launch_new_peer(stream: TcpStream, overlay_ch: crossbeam_channel::Sender<OverlayMessages>, we_called_remote: bool) {
+    thread::spawn(move || {
+        let mut peer = Peer::new(stream, CONFIG.local_node().address());
+        overlay_ch
+            .send(OverlayMessages::NewConnection(peer.peer_addr()))
+            .expect("Unable to send on OverlayManager channel");;
+
+        peer.start_authentication(we_called_remote);
+        if peer.is_authenticated() {
+            overlay_ch
+                .send(OverlayMessages::NewPeer(peer.peer_addr()))
+                .expect("Unable to send on OverlayManager channel");
+            peer.start_serve(overlay_ch);
+        } else {
+            overlay_ch
+                .send(OverlayMessages::PeerFailure(peer.peer_addr()))
+                .expect("Unable to send on OverlayManager channel");;
+        }
+    });
 }

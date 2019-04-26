@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub(crate) mod flood_gate;
 pub(crate) mod overlay_manager;
 pub(crate) mod peer;
@@ -9,6 +11,7 @@ pub(crate) use crate::{
     xdr,
 };
 pub(crate) use byteorder::{BigEndian, WriteBytesExt};
+pub(crate) use crossbeam_channel;
 pub(crate) use itertools;
 pub(crate) use log::{debug, error, info};
 pub(crate) use rand::Rng;
