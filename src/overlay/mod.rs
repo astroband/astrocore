@@ -11,7 +11,6 @@ pub(crate) use crate::{
     xdr,
 };
 pub(crate) use byteorder::{BigEndian, WriteBytesExt};
-pub(crate) use crossbeam_channel;
 pub(crate) use itertools;
 pub(crate) use log::{debug, error, info};
 pub(crate) use rand::Rng;

@@ -1,6 +1,6 @@
 use super::{
-    crossbeam_channel, crypto, debug, error, info, overlay_manager::OverlayMessages, serde_xdr,
-    sha2::Digest, xdr, BigEndian, LocalNode, Rng, WriteBytesExt, LOCAL_NODE,
+    crypto, debug, error, info, serde_xdr, sha2::Digest, xdr,
+    BigEndian, LocalNode, Rng, WriteBytesExt, LOCAL_NODE,
 };
 use std::io::{Cursor, Read, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -110,12 +110,16 @@ impl Peer {
         self.stream.peer_addr().unwrap().ip().to_string()
     }
 
-    pub fn start_serve(&mut self, overlay_ch: crossbeam_channel::Sender<OverlayMessages>) {
-        //
-        //
-        //
-        //
-        //
+    pub fn start_serve(&mut self) {
+        match self.receive_message() {
+            Ok(msg) => {
+                let message: xdr::StellarMessage = msg.into();
+                info!("Received message from: {:?}", message);
+            }
+            Err(e) => {
+                error!("Cant read XDR message cause: {}", e);
+            }
+        };
     }
 }
 
