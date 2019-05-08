@@ -16,12 +16,12 @@ impl Peer {
         peers.load::<Peer>(&*db_conn())
     }
 
-    pub fn create<'a>(addr: &String) -> Result<Peer> {
+    pub fn create<'a>(addr: &String) -> Result<usize> {
         let new_peer = NewPeer { address: addr };
 
         diesel::insert_into(peers::table)
             .values(&new_peer)
-            .get_result(&*db_conn())
+            .execute(&*db_conn())
     }
 
     pub fn get<'a>(addr: &String) -> Result<Vec<Peer>> {

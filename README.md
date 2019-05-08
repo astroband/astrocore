@@ -6,6 +6,7 @@ We already complete handsnake process with remote peer. So you can monitor all m
 
 ## Requirements
 PostgreSQL
+libsodium-dev
 
 ## Quick start
 
@@ -13,7 +14,7 @@ PostgreSQL
 2. Change `.env.example` to `.env` and change DATABASE_URL
 3. Install diesel and run migrations:
 ```
-cargo install diesel_cli --no-default-features --features postgres
+cargo install diesel_cli --no-default-features --features sqlite
 
 diesel migration run
 ```

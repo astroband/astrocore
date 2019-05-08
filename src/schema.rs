@@ -1,6 +1,6 @@
 table! {
     peers (id) {
-        id -> Int4,
-        address -> Varchar,
+        id -> Integer,
+        address -> Text,
     }
 }

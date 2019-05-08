@@ -1,11 +1,13 @@
 use super::{
     database, error,
     flood_gate::FloodGate,
-    info,
+    info, debug,
     itertools::join,
-    peer::{Peer, PeerInterface},
-    xdr, CONFIG,
+    peer::{Peer, PeerActor, PeerInterface},
+    riker::actors::*,
+    xdr, AstroProtocol, CONFIG,
 };
+
 use std::collections::{HashMap, HashSet};
 use std::net::{TcpListener, TcpStream};
 use std::thread;
@@ -45,10 +47,12 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
  * The OverlayManager tracks its known peers in the Database and shares peer
  * records with other peers when asked.
  */
+#[derive(Clone, Debug)]
 pub struct OverlayManager {
     known_peer_adresses: HashSet<String>,
-    authenticated_peers: HashMap<String, Peer>,
+    authenticated_peers: HashSet<String>,
     pending_peers: HashSet<String>,
+    failed_peers: HashSet<String>,
 }
 
 #[derive(Debug)]
@@ -58,96 +62,13 @@ pub enum OverlayError {
     InvalidPeerAddress,
 }
 
-pub enum OverlayMessages {
-    NewConnection(String),
-    NewPeer(String),
-    PeerFailure(String),
-    NewStellarMessage(String, xdr::StellarMessage),
-}
-
 impl OverlayManager {
     pub fn new() -> Self {
-        //  RWlock
         OverlayManager {
             known_peer_adresses: HashSet::new(),
-            authenticated_peers: HashMap::new(),
+            authenticated_peers: HashSet::new(),
             pending_peers: HashSet::new(),
-        }
-    }
-
-    /// start main overlay manager process
-    pub fn start(&mut self) {
-        thread::spawn(move || handle_clients());
-
-        self.populate_known_peers_from_db();
-
-        let mut flood_gate = FloodGate::new();
-        let mut received_messages: HashMap<String, xdr::StellarMessage> = HashMap::new();
-        let mut failed_peers: HashSet<String> = HashSet::new();
-
-        loop {
-            self.auth_all_known_peers();
-            info!("Auth peers: {:?}", self.authenticated_peers.keys());
-
-            for (peer_address, peer) in &mut self.authenticated_peers {
-                match peer.receive_message() {
-                    Ok(msg) => {
-                        let message: xdr::StellarMessage = msg.into();
-                        info!("Received message from: {}", peer_address);
-                        received_messages.insert(peer_address.clone(), message.clone());
-                    }
-                    Err(e) => {
-                        error!("Cant read XDR message cause: {}", e);
-                        failed_peers.insert(peer_address.clone());
-                    }
-                };
-            }
-
-            let current_ledger = unix_time();
-            for (addr, msg) in received_messages.drain().take(1) {
-                match msg {
-                    xdr::StellarMessage::Peers(ref message) => self.add_known_peers(message),
-                    xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {
-                        flood_gate.add_record(&msg, addr.clone(), current_ledger);
-                        flood_gate.broadcast(msg.clone(), false, &mut self.authenticated_peers);
-                    }
-                    _ => (),
-                }
-            }
-
-            flood_gate.clear_below(current_ledger);
-
-            for addr in failed_peers.drain().take(1) {
-                self.remove_peer_from_authenticated_list(&addr);
-            }
-        }
-    }
-
-    /// Accept peer_address in parseable format and trying to start_authenticate new connection
-    fn connect_to(&self, peer_address: String) -> Result<Peer, OverlayError> {
-        let address = match peer_address.parse() {
-            Ok(addr) => addr,
-            Err(_) => return Err(OverlayError::InvalidPeerAddress),
-        };
-
-        match TcpStream::connect_timeout(&address, Duration::new(2, 0)) {
-            Ok(stream) => {
-                info!("Successfully connected to peer {}", address);
-                let cloned_stream = stream.try_clone().expect("clone failed...");
-
-                let mut peer = Peer::new(cloned_stream, peer_address);
-                peer.start_authentication(true);
-
-                if peer.is_authenticated() {
-                    return Ok(peer);
-                } else {
-                    return Err(OverlayError::AuthFail);
-                }
-            }
-            Err(e) => {
-                error!("Failed to connect: {}, cause {}", address, e);
-                return Err(OverlayError::ConnectionFail);
-            }
+            failed_peers: HashSet::new(),
         }
     }
 
@@ -160,14 +81,17 @@ impl OverlayManager {
                 ..
             } = peer_addres
             {
-                self.add_known_peer(format!("{}:{}", join(addr, "."), peer_addres.port));
+                let peer_format_name = format!("{}:{}", join(addr, "."), peer_addres.port);
+                self.add_known_peer(peer_format_name);
             }
         }
     }
 
-    /// Add single peer address to known_peer_adresses list
+    /// Add new peer address to known_peer_adresses list
     fn add_known_peer(&mut self, peer_address: String) {
-        self.known_peer_adresses.insert(peer_address);
+        if self.is_new_peer(&peer_address) {
+            self.known_peer_adresses.insert(peer_address);
+        }
     }
 
     /// Remove single peer address from known_peer_adresses list
@@ -185,51 +109,56 @@ impl OverlayManager {
         self.pending_peers.remove(peer_address);
     }
 
+    /// Add single peer address to authenticated_peers list
+    fn add_authenticated_peer(&mut self, peer_address: String) {
+        self.authenticated_peers.insert(peer_address);
+    }
+
+    /// Remove single peer address from authenticated_peers list
+    fn remove_authenticated_peer(&mut self, peer_address: &String) {
+        self.authenticated_peers.remove(peer_address);
+    }
+
+    /// Add single peer address to failed_peer list
+    fn add_failed_peer(&mut self, peer_address: String) {
+        self.failed_peers.insert(peer_address);
+    }
+
+    /// Remove single peer address from failed_peer list
+    fn remove_failed_peer(&mut self, peer_address: &String) {
+        self.failed_peers.remove(peer_address);
+    }
+
     fn is_new_peer(&self, peer_address: &String) -> bool {
         !self.is_peer_exist(peer_address)
     }
 
     fn is_peer_exist(&self, peer_address: &String) -> bool {
         self.known_peer_adresses.contains(peer_address)
-            || self.authenticated_peers.contains_key(peer_address)
+            || self.authenticated_peers.contains(peer_address)
             || self.pending_peers.contains(peer_address)
-    }
-
-    /// Iterate through known_peer_adresses and trying to a authenticate each.
-    /// If authentication procees is Ok(), so move new peer in list of authenticated_peers
-    fn auth_all_known_peers(&mut self) {
-        if self.reached_limit_of_authenticated_peers() {
-            return;
-        };
-
-        let peers_address = self.known_peer_adresses.clone();
-        for peer_address in peers_address {
-            if self.authenticated_peers.contains_key(&peer_address) {
-                continue;
-            };
-
-            let peer_result = self.connect_to(peer_address.to_owned());
-            if let Ok(peer) = peer_result {
-                self.move_peer_to_authenticated_list(peer_address.to_owned(), peer);
-            } else {
-                self.move_peer_to_pending_list(peer_address.to_owned());
-            };
-
-            if self.reached_limit_of_authenticated_peers() {
-                break;
-            };
-        }
+            || self.failed_peers.contains(peer_address)
     }
 
     /// Move peer to authenticated_peers list
-    fn move_peer_to_authenticated_list(&mut self, peers_addresses: String, peer: Peer) {
+    fn move_peer_to_authenticated_list(&mut self, peers_addresses: String) {
         self.remove_known_peer(&peers_addresses);
-        self.authenticated_peers.insert(peers_addresses, peer);
+        self.remove_pending_peer(&peers_addresses);
+        self.add_authenticated_peer(peers_addresses);
     }
 
-    /// Remove single peer address from authenticated_peers list
-    fn remove_peer_from_authenticated_list(&mut self, peers_addresses: &String) {
-        self.authenticated_peers.remove(peers_addresses);
+    fn move_peer_to_pending_list(&mut self, peers_address: String) {
+        self.remove_known_peer(&peers_address);
+        self.remove_authenticated_peer(&peers_address);
+        self.remove_failed_peer(&peers_address);
+        self.add_pending_peer(peers_address);
+    }
+
+    fn move_peer_to_failed_list(&mut self, peers_address: String) {
+        self.remove_known_peer(&peers_address);
+        self.remove_authenticated_peer(&peers_address);
+        self.remove_pending_peer(&peers_address);
+        self.add_failed_peer(peers_address);
     }
 
     /// Limit number of connections we can have between peers
@@ -244,12 +173,12 @@ impl OverlayManager {
         }
     }
 
-    fn move_peer_to_pending_list(&mut self, peers_address: String) {
-        self.remove_known_peer(&peers_address);
-    }
-
     fn reached_limit_of_authenticated_peers(&self) -> bool {
         self.authenticated_peers.len() >= self.limit_authenticated_peers()
+    }
+
+    fn peers_to_authenticated_limit(&self) -> i32 {
+        self.limit_authenticated_peers() as i32 - self.authenticated_peers.len() as i32
     }
 }
 
@@ -261,27 +190,183 @@ fn unix_time() -> u32 {
         .as_secs() as u32
 }
 
-fn handle_clients() {
-    let listener = TcpListener::bind(CONFIG.local_node().address())
-        .expect("Unable to send on OverlayManager channel");;
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => launch_new_peer(stream, false),
-            Err(e) => {
-                error!("CONNECTION FAILED, cause: {:?}", e);
-            }
-        }
-    }
-    unreachable!();
+#[derive(Clone, Debug)]
+pub(crate) struct OverlayManagerActor {
+    state: OverlayManager,
 }
 
-fn launch_new_peer(stream: TcpStream, we_called_remote: bool) {
-    thread::spawn(move || {
-        let mut peer = Peer::new(stream, CONFIG.local_node().address());
-        peer.start_authentication(we_called_remote);
-        if peer.is_authenticated() {
-            peer.start_serve();
-        } else {
+impl OverlayManagerActor {
+    pub fn new() -> BoxActor<AstroProtocol> {
+        let actor = OverlayManagerActor {
+            state: OverlayManager::new(),
+        };
+
+        Box::new(actor)
+    }
+
+    pub fn props() -> BoxActorProd<AstroProtocol> {
+        Props::new(Box::new(OverlayManagerActor::new))
+    }
+
+    /// Run Listener actor for checking incoming connections
+    pub fn run_listener_actor(&mut self, ctx: &Context<AstroProtocol>) {
+        ctx.system
+            .actor_of(OverlayListenerActor::props(), "overlay_connection_listener")
+            .unwrap();
+    }
+
+    /// Run sheduler for checking minimal count of connections with peers
+    pub fn run_periodic_checker(&mut self, ctx: &Context<AstroProtocol>) {
+        let delay = Duration::from_millis(1000);
+        ctx.schedule_once(
+            delay,
+            ctx.myself(),
+            None,
+            AstroProtocol::CheckOverlayMinConnectionsCmd,
+        );
+    }
+
+    /// Check minimal connections
+    pub fn check_min_connections(&mut self, ctx: &Context<AstroProtocol>) {
+        if self.state.reached_limit_of_authenticated_peers() {
+            return;
         }
-    });
+
+        let limit = self.state.peers_to_authenticated_limit() as usize;
+        let mut taked_peers: Vec<_> = self
+            .state
+            .known_peer_adresses
+            .iter()
+            .cloned()
+            .take(limit)
+            .collect();
+
+        for peer in taked_peers {
+            self.state.move_peer_to_pending_list(peer.to_owned());
+            self.handle_new_initiated_peer(ctx, peer);
+        }
+
+        self.run_periodic_checker(ctx);
+    }
+
+    pub fn handle_new_incoming_peer(&mut self, ctx: &Context<AstroProtocol>, mut peer: Peer) {
+        if !self.state.reached_limit_of_authenticated_peers() {
+            let name = format!("peer-{}", peer.peer_addr());
+            ctx.system
+                .actor_of(PeerActor::incoming_peer_props(peer), &name);
+        }
+    }
+
+    pub fn handle_new_initiated_peer(&mut self, ctx: &Context<AstroProtocol>, address: String) {
+        let name = format!("peer-{}", address);
+        ctx.system
+            .actor_of(PeerActor::initiated_peer_props(address), &name);
+    }
+
+    pub fn handle_incoming_message(&mut self, address: String, message: xdr::StellarMessage) {
+        match message {
+            xdr::StellarMessage::Peers(ref set_of_peers) => {
+                self.state.add_known_peers(set_of_peers);
+                info!("[OverlayManager][add_known_peers] {:?}", self.state.known_peer_adresses);
+            }
+            xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {
+                // flood_gate.add_record(&msg, addr.clone(), current_ledger);
+                // flood_gate.broadcast(msg.clone(), false, &mut self.authenticated_peers);
+            }
+            _ => (),
+        }
+        // flood_gate.clear_below(current_ledger);
+    }
+}
+
+impl Actor for OverlayManagerActor {
+    type Msg = AstroProtocol;
+
+    fn pre_start(&mut self, ctx: &Context<Self::Msg>) {
+        self.state = OverlayManager::new();
+        self.state.populate_known_peers_from_db();
+    }
+
+    fn receive(
+        &mut self,
+        ctx: &Context<Self::Msg>,
+        msg: Self::Msg,
+        sender: Option<ActorRef<Self::Msg>>,
+    ) {
+        debug!("OVERLAY RECEIVE: {:?}", msg);
+        match msg {
+            AstroProtocol::CheckOverlayMinConnectionsCmd => self.check_min_connections(ctx),
+            AstroProtocol::HandleOverlayIncomingPeerCmd(peer) => {
+                self.handle_new_incoming_peer(ctx, peer)
+            }
+            AstroProtocol::ReceivedPeerMessageCmd(address, message) => {
+                self.handle_incoming_message(address, message)
+            }
+            AstroProtocol::AuthPeerOkCmd(address) => {
+                self.state.move_peer_to_authenticated_list(address)
+            }
+            AstroProtocol::FailedPeerCmd(address) => {
+                self.state.move_peer_to_failed_list(address);
+                ctx.system.stop(&sender.unwrap());
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn post_start(&mut self, ctx: &Context<Self::Msg>) {
+        self.run_listener_actor(ctx);
+        self.run_periodic_checker(ctx);
+    }
+}
+
+pub(crate) struct OverlayListenerActor;
+
+impl OverlayListenerActor {
+    pub fn new() -> BoxActor<AstroProtocol> {
+        Box::new(OverlayListenerActor)
+    }
+
+    fn props() -> BoxActorProd<AstroProtocol> {
+        Props::new(Box::new(OverlayListenerActor::new))
+    }
+}
+
+impl Actor for OverlayListenerActor {
+    type Msg = AstroProtocol;
+
+    fn receive(
+        &mut self,
+        ctx: &Context<Self::Msg>,
+        msg: Self::Msg,
+        _sender: Option<ActorRef<Self::Msg>>,
+    ) {
+        unreachable!();
+    }
+
+    fn post_start(&mut self, ctx: &Context<Self::Msg>) {
+        let listener = TcpListener::bind(CONFIG.local_node().address()).expect(
+            "[Overlay][Listener] Unable to listen local address to handle incoming connections",
+        );
+
+        info!(
+            "[Overlay][Listener] start to listen incoming connections on {:?}",
+            CONFIG.local_node().address()
+        );
+
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    stream.set_read_timeout(Some(Duration::from_millis(300)));
+                    let peer = Peer::new(stream, CONFIG.local_node().address());
+                    ctx.myself()
+                        .parent()
+                        .tell(AstroProtocol::HandleOverlayIncomingPeerCmd(peer), None)
+                }
+                Err(e) => {
+                    info!("[Overlay][Listener] CONNECTION FAILED, cause: {:?}", e);
+                }
+            }
+        }
+        unreachable!();
+    }
 }
