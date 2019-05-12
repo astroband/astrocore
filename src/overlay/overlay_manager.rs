@@ -1,7 +1,7 @@
 use super::{
-    database, error,
-    flood_gate::FloodGate,
-    info, debug,
+    address_peer_to_actor, database, debug, error,
+    flood_gate::FloodGateActor,
+    info,
     itertools::join,
     peer::{Peer, PeerActor, PeerInterface},
     riker::actors::*,
@@ -208,6 +208,13 @@ impl OverlayManagerActor {
         Props::new(Box::new(OverlayManagerActor::new))
     }
 
+    /// Run FloodGate
+    pub fn run_flood_gate(&mut self, ctx: &Context<AstroProtocol>) {
+        ctx.system
+            .actor_of(FloodGateActor::props(), "flood_gate")
+            .unwrap();
+    }
+
     /// Run Listener actor for checking incoming connections
     pub fn run_listener_actor(&mut self, ctx: &Context<AstroProtocol>) {
         ctx.system
@@ -251,31 +258,50 @@ impl OverlayManagerActor {
 
     pub fn handle_new_incoming_peer(&mut self, ctx: &Context<AstroProtocol>, mut peer: Peer) {
         if !self.state.reached_limit_of_authenticated_peers() {
-            let name = format!("peer-{}", peer.peer_addr());
+            let name = format!("peer-{}", address_peer_to_actor(peer.peer_addr()));
             ctx.system
                 .actor_of(PeerActor::incoming_peer_props(peer), &name);
         }
     }
 
     pub fn handle_new_initiated_peer(&mut self, ctx: &Context<AstroProtocol>, address: String) {
-        let name = format!("peer-{}", address);
+        let name = format!("peer-{}", address_peer_to_actor(address.clone()));
         ctx.system
             .actor_of(PeerActor::initiated_peer_props(address), &name);
     }
 
-    pub fn handle_incoming_message(&mut self, address: String, message: xdr::StellarMessage) {
+    pub fn handle_incoming_message(
+        &mut self,
+        ctx: &Context<AstroProtocol>,
+        address: String,
+        message: xdr::StellarMessage,
+    ) {
         match message {
             xdr::StellarMessage::Peers(ref set_of_peers) => {
                 self.state.add_known_peers(set_of_peers);
-                info!("[OverlayManager][add_known_peers] {:?}", self.state.known_peer_adresses);
+                info!(
+                    "[OverlayManager][add_known_peers] {:?}",
+                    self.state.known_peer_adresses
+                );
             }
             xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {
-                // flood_gate.add_record(&msg, addr.clone(), current_ledger);
-                // flood_gate.broadcast(msg.clone(), false, &mut self.authenticated_peers);
+                let flood_gate = ctx.select("/user/flood_gate").unwrap();
+                flood_gate.tell(
+                    AstroProtocol::AddRecordFloodGateCmd(message.to_owned(), address, unix_time()),
+                    None,
+                );
+                flood_gate.tell(
+                    AstroProtocol::BroadcastFloodGateCmd(
+                        message.to_owned(),
+                        false,
+                        self.state.authenticated_peers.clone(),
+                    ),
+                    None,
+                );
+                flood_gate.tell(AstroProtocol::ClearFloodGateCmd(unix_time()), None);
             }
             _ => (),
         }
-        // flood_gate.clear_below(current_ledger);
     }
 }
 
@@ -300,7 +326,7 @@ impl Actor for OverlayManagerActor {
                 self.handle_new_incoming_peer(ctx, peer)
             }
             AstroProtocol::ReceivedPeerMessageCmd(address, message) => {
-                self.handle_incoming_message(address, message)
+                self.handle_incoming_message(ctx, address, message)
             }
             AstroProtocol::AuthPeerOkCmd(address) => {
                 self.state.move_peer_to_authenticated_list(address)
@@ -316,6 +342,7 @@ impl Actor for OverlayManagerActor {
     fn post_start(&mut self, ctx: &Context<Self::Msg>) {
         self.run_listener_actor(ctx);
         self.run_periodic_checker(ctx);
+        self.run_flood_gate(ctx);
     }
 }
 
@@ -356,7 +383,6 @@ impl Actor for OverlayListenerActor {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    stream.set_read_timeout(Some(Duration::from_millis(300)));
                     let peer = Peer::new(stream, CONFIG.local_node().address());
                     ctx.myself()
                         .parent()

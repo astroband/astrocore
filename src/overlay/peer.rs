@@ -1,6 +1,6 @@
 use super::{
-    crypto, debug, error, trace, info, riker::actors::*, serde_xdr, sha2::Digest, xdr, AstroProtocol,
-    BigEndian, LocalNode, Rng, WriteBytesExt, LOCAL_NODE,
+    crypto, debug, error, info, riker::actors::*, serde_xdr, sha2::Digest, trace, xdr,
+    AstroProtocol, BigEndian, LocalNode, Rng, WriteBytesExt, LOCAL_NODE,
 };
 use std::io::{Cursor, Read, Write};
 use std::net::TcpStream;
@@ -406,7 +406,8 @@ impl PeerInterface for Peer {
 
         trace!(
             "[Overlay] RECEIVE HEADER {:?} \nWITH LENGTH {:?}",
-            header, message_length
+            header,
+            message_length
         );
 
         return message_length;
@@ -496,8 +497,16 @@ impl PeerActor {
         Props::new_args(Box::new(PeerActor::new), (None, Some(peer)))
     }
 
-    pub fn overlay_manager_ref(&self, ctx: &Context<AstroProtocol>) -> ActorSelection<AstroProtocol> {
+    pub fn overlay_manager_ref(
+        &self,
+        ctx: &Context<AstroProtocol>,
+    ) -> ActorSelection<AstroProtocol> {
         ctx.select("/user/overlay_manager").unwrap()
+    }
+
+    pub fn repeateable_read(&self, ctx: &Context<AstroProtocol>) {
+        let delay = Duration::from_millis(200);
+        ctx.schedule_once(delay, ctx.myself(), None, AstroProtocol::ServePeerCmd);
     }
 }
 
@@ -520,7 +529,8 @@ impl Actor for PeerActor {
                                 msg.into(),
                             ),
                             Some(ctx.myself()),
-                        )
+                        );
+                        self.repeateable_read(ctx);
                     }
                     Err(e) => {
                         debug!("Cant read XDR message cause: {}", e);
@@ -530,14 +540,6 @@ impl Actor for PeerActor {
                         );
                     }
                 };
-
-                let delay = Duration::from_millis(1000);
-                ctx.schedule_once(
-                    delay,
-                    ctx.myself(),
-                    None,
-                    AstroProtocol::ServePeerCmd,
-                );
             }
             AstroProtocol::SendPeerMessageCmd(message) => {
                 self.peer.as_mut().unwrap().send_message(message);
@@ -564,19 +566,11 @@ impl Actor for PeerActor {
 
         if let Some(ref peer) = self.peer {
             if peer.is_authenticated() {
-
-                ctx.myself().parent().tell(
+                self.overlay_manager_ref(ctx).tell(
                     AstroProtocol::AuthPeerOkCmd(self.address.as_ref().unwrap().to_owned()),
                     Some(ctx.myself()),
                 );
-
-                let delay = Duration::from_millis(500);
-                ctx.schedule_once(
-                    delay,
-                    ctx.myself(),
-                    None,
-                    AstroProtocol::ServePeerCmd,
-                );
+                self.repeateable_read(ctx);
                 return;
             }
         }

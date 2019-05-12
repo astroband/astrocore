@@ -26,3 +26,7 @@ pub fn message_abbr(message: &xdr::StellarMessage) -> String {
     let bytes = serde_xdr::to_bytes(message).unwrap();
     String::from_utf8_lossy(crypto::hash(&bytes.as_slice()).as_slice()).to_string()
 }
+
+pub fn address_peer_to_actor(address: String) -> String {
+    address.replace(".", "-").replace(":", "-")
+}

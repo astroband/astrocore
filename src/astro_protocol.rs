@@ -1,6 +1,7 @@
 use crate::overlay::Peer;
 use crate::xdr;
 use riker::actors::*;
+use std::collections::HashSet;
 
 /**
  * AstroProtocol contains all kind of messages we use for
@@ -23,6 +24,12 @@ pub enum AstroProtocol {
     AuthPeerOkCmd(String),
     /// PeerActor interaction failed
     FailedPeerCmd(String),
+    /// Add message from some peer at some seq_ledger
+    AddRecordFloodGateCmd(xdr::StellarMessage, String, u32),
+    /// Broadcast message to authenticated peers
+    BroadcastFloodGateCmd(xdr::StellarMessage, bool, HashSet<String>),
+    /// Clear records in flood gate below transfered seq_ledger
+    ClearFloodGateCmd(u32),
 }
 
 impl Into<ActorMsg<AstroProtocol>> for AstroProtocol {

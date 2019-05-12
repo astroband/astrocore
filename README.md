@@ -20,5 +20,5 @@ diesel migration run
 ```
 4. Run astrocore:
 ```
-RUST_LOG="astrocore=info" RUSTFLAGS=-Awarnings cargo run
+RIKER_CONF="riker.toml" RUST_LOG="astrocore=info" RUSTFLAGS=-Awarnings cargo run
 ```
