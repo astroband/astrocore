@@ -1,5 +1,8 @@
-use super::{info, message_abbr, peer::PeerInterface, xdr};
-use std::collections::HashMap;
+use super::{
+    address_peer_to_actor, debug, info, message_abbr, peer::PeerInterface, riker::actors::*, xdr,
+    AstroProtocol,
+};
+use std::collections::{HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /**
@@ -14,7 +17,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
  * relate, and all flood-management information for a given ledger number
  * is purged from the FloodGate when the ledger closes.
  */
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FloodGate {
     /// set of received messages
     pub flood_map: HashMap<String, FloodRecord>,
@@ -22,7 +25,7 @@ pub struct FloodGate {
     pub m_shutting_down: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FloodRecord {
     /// current ledger block
     pub m_ledger_seq: u32,
@@ -80,50 +83,6 @@ impl FloodGate {
         };
     }
 
-    // send message to anyone you haven't gotten it from
-    pub fn broadcast<T: PeerInterface>(
-        &mut self,
-        message: xdr::StellarMessage,
-        force: bool,
-        peers: &mut HashMap<String, T>,
-    ) {
-        if self.m_shutting_down {
-            return;
-        };
-
-        let index = message_abbr(&message);
-
-        // TODO: ledger_seq
-        let unix_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as u32;
-
-        // no one has sent us this message
-        if self.flood_map.get(&index).is_none() || force {
-            self.add_record(&message, "self".to_string(), unix_time);
-        };
-
-        let record = match self.flood_map.get_mut(&index) {
-            Some(rec) => rec,
-            None => return,
-        };
-
-        let previous_sent = record.m_peers_told.clone();
-        for peer in peers.values_mut() {
-            if peer.is_authenticated() && !previous_sent.contains(peer.address()) {
-                peer.send_message(message.clone());
-                record.m_peers_told.push(peer.address().clone());
-            }
-        }
-
-        info!(
-            "[Overlay] broadcast '{:?}' told {}",
-            message,
-            record.m_peers_told.len() - previous_sent.len()
-        );
-    }
-
     pub fn shutdown(&mut self) -> () {
         self.m_shutting_down = true;
         self.flood_map.clear();
@@ -140,6 +99,95 @@ impl FloodRecord {
             m_ledger_seq,
             m_message,
             m_peers_told,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct FloodGateActor {
+    state: FloodGate,
+}
+
+impl FloodGateActor {
+    pub fn new() -> BoxActor<AstroProtocol> {
+        let actor = FloodGateActor {
+            state: FloodGate::new(),
+        };
+
+        Box::new(actor)
+    }
+
+    pub fn props() -> BoxActorProd<AstroProtocol> {
+        Props::new(Box::new(FloodGateActor::new))
+    }
+
+    /// Send message to anyone you haven't gotten it from
+    pub fn broadcast(
+        &mut self,
+        ctx: &Context<AstroProtocol>,
+        message: xdr::StellarMessage,
+        force: bool,
+        peers: HashSet<String>,
+    ) {
+        if self.state.m_shutting_down {
+            return;
+        };
+
+        let index = message_abbr(&message);
+
+        // TODO: ledger_seq
+        let unix_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as u32;
+
+        // no one has sent us this message
+        if self.state.flood_map.get(&index).is_none() || force {
+            self.state
+                .add_record(&message, "self".to_string(), unix_time);
+        };
+
+        let record = match self.state.flood_map.get_mut(&index) {
+            Some(rec) => rec,
+            None => return,
+        };
+
+        let previous_sent = record.m_peers_told.clone();
+        for peer in peers {
+            let name = format!("/user/peer-{}", address_peer_to_actor(peer.clone()));
+            ctx.select(&name)
+                .unwrap()
+                .tell(AstroProtocol::SendPeerMessageCmd(message.to_owned()), None);
+            record.m_peers_told.push(peer.to_owned());
+        }
+
+        info!(
+            "[Overlay][FloodGate] broadcast '{:?}' told {}",
+            message,
+            record.m_peers_told.len() - previous_sent.len()
+        );
+    }
+}
+
+impl Actor for FloodGateActor {
+    type Msg = AstroProtocol;
+
+    fn receive(
+        &mut self,
+        ctx: &Context<Self::Msg>,
+        msg: Self::Msg,
+        _sender: Option<ActorRef<Self::Msg>>,
+    ) {
+        debug!("FLOOD_GATE RECEIVE: {:?}", msg);
+        match msg {
+            AstroProtocol::AddRecordFloodGateCmd(message, address, seq_ledger) => {
+                self.state.add_record(&message, address, seq_ledger);
+            }
+            AstroProtocol::BroadcastFloodGateCmd(message, force, peers) => {
+                self.broadcast(ctx, message, force, peers);
+            }
+            AstroProtocol::ClearFloodGateCmd(seq_ledger) => self.state.clear_below(seq_ledger),
+            _ => unreachable!(),
         }
     }
 }
@@ -224,53 +272,6 @@ mod tests {
                 flood_gate.add_record(&build_transaction(), "192.168.5.5".to_string(), 500);
 
             assert_eq!(result, false);
-        }
-    }
-
-    mod broadcast {
-        use super::*;
-        use crate::factories::peer::PeerMock;
-
-        #[test]
-        fn broadcast() {
-            let mut flood_gate = build_flood_gate();
-            flood_gate.flood_map.clear();
-
-            let peer_mock1 = PeerMock {
-                address: "0.0.0.0".to_string(),
-                is_authenticated: true,
-            };
-            let peer_mock2 = PeerMock {
-                address: "0.0.0.1".to_string(),
-                is_authenticated: true,
-            };
-            let peer_mock3 = PeerMock {
-                address: "0.0.0.2".to_string(),
-                is_authenticated: true,
-            };
-
-            let mut peers: HashMap<String, PeerMock> = HashMap::new();
-            peers.insert("0.0.0.0".to_string(), peer_mock1);
-            peers.insert("0.0.0.1".to_string(), peer_mock2);
-            peers.insert("0.0.0.2".to_string(), peer_mock3);
-
-            let message = build_transaction();
-            let index = message_abbr(&message);
-
-            flood_gate.broadcast(message, false, &mut peers);
-
-            let record = flood_gate
-                .flood_map
-                .get_mut(&index)
-                .expect("record should exist");
-
-            let mut expect_m_peers_told = vec![
-                "self".to_string(),
-                "0.0.0.0".to_string(),
-                "0.0.0.1".to_string(),
-                "0.0.0.2".to_string(),
-            ];
-            assert_eq!(record.m_peers_told.sort(), expect_m_peers_told.sort());
         }
     }
 

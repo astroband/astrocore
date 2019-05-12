@@ -5,3 +5,5 @@ xdr-test
 .byebug_history
 Gemfile.lock
 .env
+.vscode
+astrocore_db.sqlite3

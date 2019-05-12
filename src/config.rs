@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use lazy_static::lazy_static;
 use serde_derive::Deserialize;
 use std::fs::File;

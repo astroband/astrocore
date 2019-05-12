@@ -14,7 +14,8 @@ sodiumoxide libs in your OS
 3. Change `.env.example` to `.env` and change DATABASE_URL
 3. Install diesel and run migrations:
 ```
-cargo install diesel_cli --no-default-features --features postgres
+sudo apt-get install sqlite3 libsqlite3-dev
+cargo install diesel_cli --no-default-features --features sqlite
 
 diesel migration run
 ```

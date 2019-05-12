@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate diesel;
 
+mod astro_protocol;
 mod config;
 mod crypto;
 mod database;
@@ -10,10 +11,20 @@ mod overlay;
 mod schema;
 mod scp;
 mod xdr;
-use overlay::overlay_manager::OverlayManager;
+
+use astro_protocol::AstroProtocol;
+use overlay::overlay_manager::OverlayManagerActor;
+use riker::actors::*;
+use riker_default::DefaultModel;
 
 fn main() {
     env_logger::init();
     database::init();
-    OverlayManager::new().start();
+
+    let model: DefaultModel<AstroProtocol> = DefaultModel::new();
+    let sys = ActorSystem::new(&model).unwrap();
+    let props = OverlayManagerActor::props();
+    sys.actor_of(props, "overlay_manager").unwrap();
+
+    loop {}
 }
