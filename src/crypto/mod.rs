@@ -30,6 +30,6 @@ pub fn random_bytes(size: usize) -> Vec<u8> {
 // if possible.
 //
 // `init` also makes `KeyPair::random()` thread-safe.
-pub fn init() -> () {
+pub fn init() {
     sodiumoxide::init().unwrap();
 }

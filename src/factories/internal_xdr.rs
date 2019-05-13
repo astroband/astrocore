@@ -20,7 +20,7 @@ pub fn build_hello() -> xdr::Hello {
         ledger_version: 9000 as xdr::Uint32,
         overlay_version: 9000 as xdr::Uint32,
         overlay_min_version: 0 as xdr::Uint32,
-        network_id: network_id,
+        network_id,
         version_str: "stellar-core-rust[alpha-0.0]".to_string(),
         listening_port: 11625,
         peer_id: build_public_key(),

@@ -133,7 +133,7 @@ impl Actor for OverlayManagerActor {
         match msg {
             AstroProtocol::CheckOverlayMinConnectionsCmd => self.check_min_connections(ctx),
             AstroProtocol::HandleOverlayIncomingPeerCmd(peer) => {
-                self.handle_new_incoming_peer(ctx, peer)
+                self.handle_new_incoming_peer(ctx, *peer)
             }
             AstroProtocol::ReceivedPeerMessageCmd(address, message) => {
                 self.handle_incoming_message(ctx, address, message)
@@ -193,7 +193,7 @@ impl Actor for OverlayListenerActor {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    let peer = Peer::new(stream, CONFIG.local_node().address());
+                    let peer = Box::new(Peer::new(stream, CONFIG.local_node().address()));
                     ctx.myself()
                         .parent()
                         .tell(AstroProtocol::HandleOverlayIncomingPeerCmd(peer), None)

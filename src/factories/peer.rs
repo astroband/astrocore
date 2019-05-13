@@ -11,9 +11,9 @@ pub struct PeerMock {
 }
 
 impl PeerInterface for PeerMock {
-    fn start_authentication(&mut self, we_called_remote: bool) -> () {}
+    fn start_authentication(&mut self, we_called_remote: bool) {}
 
-    fn handle_hello(&mut self, received_hello: xdr::StellarMessage, we_called_remote: bool) -> () {}
+    fn handle_hello(&mut self, received_hello: xdr::StellarMessage, we_called_remote: bool) {}
 
     fn set_remote_keys(
         &mut self,

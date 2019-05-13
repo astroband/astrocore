@@ -92,23 +92,23 @@ impl Peer {
             network_id: LOCAL_NODE.network_id().to_owned(),
             version_str: String::from("stellar-core-rust[alpha-0.0]"),
             listening_port: 11625,
-            peer_id: peer_id,
+            peer_id,
             cert: auth_cert.clone(),
             nonce: xdr::Uint256(nonce),
         };
 
         Peer {
-            stream: stream,
+            stream,
             send_message_sequence: 0 as xdr::Uint64,
             cached_auth_cert: auth_cert,
-            auth_secret_key: auth_secret_key,
-            auth_public_key: auth_public_key,
+            auth_secret_key,
+            auth_public_key,
             auth_shared_key: crypto::HmacSha256Key::zero(),
             received_mac_key: crypto::HmacSha256Key::zero(),
             sended_mac_key: crypto::HmacSha256Key::zero(),
-            nonce: nonce,
-            hello: hello,
-            address: address,
+            nonce,
+            hello,
+            address,
             peer_info: Default::default(),
             is_authenticated: false,
         }
@@ -156,7 +156,7 @@ impl PeerInterface for Peer {
     // If any verify step fails, the peer disconnects immediately.
     /// Start connection process to peer.
     /// More additional info: https://github.com/stellar/stellar-core/blob/ddef8bcacc5193bdd4daa07af404f1b6b1adaf39/src/overlay/OverlayManagerImpl.cpp#L28-L45
-    fn start_authentication(&mut self, we_called_remote: bool) -> () {
+    fn start_authentication(&mut self, we_called_remote: bool) {
         info!(
             "[Overlay][Peer] Started authentication proccess peer: {}",
             self.address
@@ -178,15 +178,12 @@ impl PeerInterface for Peer {
             }
             self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
             // last auth message from remote peer
-            match self.receive_message() {
-                Err(_) => {
+            if self.receive_message().is_err() {
                     info!(
                         "[Overlay][Peer] Not received last auth message {}. Authentication aborted",
                         self.address
                     );
                     return;
-                }
-                _ => {}
             }
         } else {
             match self.receive_message() {
@@ -204,15 +201,12 @@ impl PeerInterface for Peer {
             self.send_message(xdr::StellarMessage::Hello(self.hello.clone()));
 
             // last auth message from remote peer
-            match self.receive_message() {
-                Err(_) => {
+            if self.receive_message().is_err() {
                     info!(
                         "[Overlay][Peer] Not received last auth message {}. Authentication aborted",
                         self.address
                     );
                     return;
-                }
-                _ => {}
             }
             self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
         }
@@ -331,7 +325,7 @@ impl PeerInterface for Peer {
             pubkey: xdr::Curve25519Public {
                 key: auth_public_key.0,
             },
-            expiration: expiration,
+            expiration,
             sig: xdr::Signature(sign.to_vec()),
         }
     }
@@ -340,7 +334,7 @@ impl PeerInterface for Peer {
     fn send_message(&mut self, message: xdr::StellarMessage) {
         let mut am0 = xdr::AuthenticatedMessageV0 {
             sequence: self.send_message_sequence,
-            message: message,
+            message,
             mac: xdr::HmacSha256Mac {
                 mac: crypto::HmacSha256Mac::zero().0,
             },
@@ -380,7 +374,7 @@ impl PeerInterface for Peer {
 
         let mut header = Vec::new();
         header
-            .write_u32::<BigEndian>(message_length | 0x80000000)
+            .write_u32::<BigEndian>(message_length | 0x8000_0000)
             .unwrap();
         self.stream.write(&header[..]);
     }
@@ -409,7 +403,7 @@ impl PeerInterface for Peer {
             message_length
         );
 
-        return message_length;
+        message_length
     }
 
     fn receive_message(
@@ -432,11 +426,11 @@ impl PeerInterface for Peer {
 
         // TODO: compare with HmacSha256Mac setted in Peer in stage of auth
         // TODO: check sequence of messages
-        return authenticated_message;
+        authenticated_message
     }
 
     fn increment_message_sequence(&mut self) {
-        self.send_message_sequence = self.send_message_sequence + 1;
+        self.send_message_sequence += 1;
     }
 
     fn set_authenticated(&mut self) {
@@ -459,18 +453,18 @@ impl Clone for Peer {
                 .stream
                 .try_clone()
                 .expect("Failed when try to clone socket stream"),
-            send_message_sequence: self.send_message_sequence.clone(),
+            send_message_sequence: self.send_message_sequence,
             cached_auth_cert: self.cached_auth_cert.clone(),
             auth_secret_key: self.auth_secret_key.clone(),
             auth_public_key: self.auth_public_key.clone(),
             auth_shared_key: self.auth_shared_key.clone(),
             received_mac_key: self.received_mac_key.clone(),
             sended_mac_key: self.sended_mac_key.clone(),
-            nonce: self.nonce.clone(),
+            nonce: self.nonce,
             hello: self.hello.clone(),
             address: self.address.clone(),
             peer_info: self.peer_info.clone(),
-            is_authenticated: self.is_authenticated.clone(),
+            is_authenticated: self.is_authenticated,
         }
     }
 }

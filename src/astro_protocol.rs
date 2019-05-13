@@ -11,7 +11,7 @@ use std::collections::HashSet;
 #[derive(Clone, Debug)]
 pub enum AstroProtocol {
     /// New Peer incoming from Listener
-    HandleOverlayIncomingPeerCmd(Peer),
+    HandleOverlayIncomingPeerCmd(Box<Peer>),
     /// Check connections limit
     CheckOverlayMinConnectionsCmd,
     /// Awaiting incoming messag from remote peer

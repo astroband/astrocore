@@ -16,9 +16,7 @@ fn establish_connection() -> Pool<ConnectionManager<SqliteConnection>> {
     let pool = Pool::builder()
         .max_size(*CONFIG.db_pool())
         .build(manager)
-        .expect(&format!(
-            "[DB] Failed to create pool. Check your db settings"
-        ));
+        .expect("[DB] Failed to create pool. Check your db settings");
 
     info!("[DB] Connection to database established");
 
