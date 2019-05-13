@@ -1,4 +1,5 @@
 #![allow(dead_code, unused_must_use)]
+#![allow(clippy::new_ret_no_self)]
 
 mod flood_gate;
 mod overlay_manager;

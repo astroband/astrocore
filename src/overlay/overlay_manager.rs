@@ -64,7 +64,7 @@ impl OverlayManager {
 
     /// Accept llist of xdr::PeerAddress and move each of them in known_peer_adresses
     /// in parseable format
-    pub(crate) fn add_known_peers(&mut self, peers_addresses: &Vec<xdr::PeerAddress>) {
+    pub(crate) fn add_known_peers(&mut self, peers_addresses: &[xdr::PeerAddress]) {
         for peer_addres in peers_addresses {
             if let xdr::PeerAddress {
                 ip: xdr::PeerAddressIp::Ipv4(ref addr),
@@ -85,7 +85,7 @@ impl OverlayManager {
     }
 
     /// Remove single peer address from known_peer_adresses list
-    pub(crate) fn remove_known_peer(&mut self, peer_address: &String) {
+    pub(crate) fn remove_known_peer(&mut self, peer_address: &str) {
         self.known_peer_adresses.remove(peer_address);
     }
 
@@ -95,7 +95,7 @@ impl OverlayManager {
     }
 
     /// Remove single peer address from pending_peers list
-    pub(crate) fn remove_pending_peer(&mut self, peer_address: &String) {
+    pub(crate) fn remove_pending_peer(&mut self, peer_address: &str) {
         self.pending_peers.remove(peer_address);
     }
 
@@ -105,7 +105,7 @@ impl OverlayManager {
     }
 
     /// Remove single peer address from authenticated_peers list
-    pub(crate) fn remove_authenticated_peer(&mut self, peer_address: &String) {
+    pub(crate) fn remove_authenticated_peer(&mut self, peer_address: &str) {
         self.authenticated_peers.remove(peer_address);
     }
 
@@ -115,15 +115,15 @@ impl OverlayManager {
     }
 
     /// Remove single peer address from failed_peer list
-    pub(crate) fn remove_failed_peer(&mut self, peer_address: &String) {
+    pub(crate) fn remove_failed_peer(&mut self, peer_address: &str) {
         self.failed_peers.remove(peer_address);
     }
 
-    pub(crate) fn is_new_peer(&self, peer_address: &String) -> bool {
+    pub(crate) fn is_new_peer(&self, peer_address: &str) -> bool {
         !self.is_peer_exist(peer_address)
     }
 
-    pub(crate) fn is_peer_exist(&self, peer_address: &String) -> bool {
+    pub(crate) fn is_peer_exist(&self, peer_address: &str) -> bool {
         self.known_peer_adresses.contains(peer_address)
             || self.authenticated_peers.contains(peer_address)
             || self.pending_peers.contains(peer_address)

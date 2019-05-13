@@ -20,15 +20,15 @@ pub struct LocalNode {
 
 impl LocalNode {
     /// Return Node instance
-    pub fn new(seed: String, stellar_network: &Vec<u8>) -> LocalNode {
-        let key_pair = crypto::KeyPair::from_secret_seed(&seed).unwrap();
+    pub fn new(secret_seed: String, stellar_network: &[u8]) -> LocalNode {
+        let key_pair = crypto::KeyPair::from_secret_seed(&secret_seed).unwrap();
 
         let mut network_id: [u8; 32] = Default::default();
         network_id.copy_from_slice(&stellar_network[..]);
 
         LocalNode {
-            secret_seed: seed,
-            key_pair: key_pair,
+            secret_seed,
+            key_pair,
             network_id: xdr::Hash(network_id),
         }
     }

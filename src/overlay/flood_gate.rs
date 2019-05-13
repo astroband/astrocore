@@ -79,7 +79,7 @@ impl FloodGate {
         };
     }
 
-    pub fn shutdown(&mut self) -> () {
+    pub fn shutdown(&mut self) {
         self.m_shutting_down = true;
         self.flood_map.clear();
     }
