@@ -5,7 +5,7 @@ This crate try to implement stellar node on rust. Still in very ealy stage.
 We already complete handsnake process with remote peer. So you can monitor all messages from remote peer or explore the stellar network jumping between known addresses.
 
 ## Requirements
-PostgreSQL
+SQLite
 libsodium-dev
 
 ## Quick start
@@ -20,5 +20,5 @@ diesel migration run
 ```
 4. Run astrocore:
 ```
-RIKER_CONF="riker.toml" RUST_LOG="astrocore=info" RUSTFLAGS=-Awarnings cargo run
+RUST_LOG="astrocore=info" RUSTFLAGS=-Awarnings cargo run
 ```
