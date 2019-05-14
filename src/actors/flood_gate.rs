@@ -1,5 +1,5 @@
 use super::{
-    address_peer_to_actor, debug, message_abbr, riker::actors::*, xdr, AstroProtocol,
+    peer_ref, debug, message_abbr, riker::actors::*, xdr, AstroProtocol,
     FloodGate,
 };
 use std::collections::HashSet;
@@ -50,10 +50,7 @@ impl FloodGateActor {
 
         let previous_sent = record.m_peers_told.clone();
         for peer in peers {
-            let name = format!("/user/peer-{}", address_peer_to_actor(peer.clone()));
-            ctx.select(&name)
-                .unwrap()
-                .tell(AstroProtocol::SendPeerMessageCmd(message.to_owned()), None);
+            peer_ref(&peer, ctx).tell(AstroProtocol::SendPeerMessageCmd(message.to_owned()), None);
             record.m_peers_told.push(peer.to_owned());
         }
 

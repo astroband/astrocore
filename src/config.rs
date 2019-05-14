@@ -21,7 +21,9 @@ pub struct Config {
     test_passphrase: String,
     seed: String,
     db_pool: u32,
-    peers_limit: u32,
+    // Maximum of connected peers
+    max_peers: u32,
+    min_peers: u32,
 }
 
 impl Config {
@@ -60,8 +62,12 @@ impl Config {
         &self.db_pool
     }
 
-    pub fn peers_limit(&self) -> &u32 {
-        &self.peers_limit
+    pub fn max_peers(&self) -> &u32 {
+        &self.max_peers
+    }
+
+    pub fn min_peers(&self) -> &u32 {
+        &self.min_peers
     }
 }
 

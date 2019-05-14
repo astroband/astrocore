@@ -11,24 +11,36 @@ pub(crate) use crate::{
     overlay::{message_abbr, FloodGate, OverlayManager, Peer, PeerInterface},
     xdr,
 };
-pub(crate) use log::{debug, info};
+pub(crate) use log::{debug, info, error};
 pub(crate) use riker;
 
-use self::flood_gate::FloodGateActor;
 pub(crate) use self::overlay_manager::OverlayManagerActor;
+use self::flood_gate::FloodGateActor;
 use self::peer::PeerActor;
 
-fn address_peer_to_actor(address: String) -> String {
-    address.replace(".", "-").replace(":", "-")
-}
+use riker::actors::*;
+use riker_default::DefaultModel;
 
 pub(crate) fn start() {
-    use riker::actors::*;
-    use riker_default::DefaultModel;
-
     let model: DefaultModel<AstroProtocol> = DefaultModel::new();
     let sys = ActorSystem::new(&model).unwrap();
     let props = OverlayManagerActor::props();
 
     sys.actor_of(props, "overlay_manager").unwrap();
+}
+
+fn overlay_manager_ref(ctx: &Context<AstroProtocol>) -> ActorSelection<AstroProtocol> {
+    ctx.select("/user/overlay_manager").unwrap()
+}
+
+fn flood_gate_ref(ctx: &Context<AstroProtocol>) -> ActorSelection<AstroProtocol> {
+    ctx.select("/user/flood_gate").unwrap()
+}
+
+fn peer_ref(address: &str, ctx: &Context<AstroProtocol>) -> ActorSelection<AstroProtocol> {
+    ctx.select(&format!("/user/peer-{}", peer_actor_name(address))).unwrap()
+}
+
+fn peer_actor_name(address: &str) -> String {
+    format!("peer-{}", address.replace(".", "-").replace(":", "-"))
 }

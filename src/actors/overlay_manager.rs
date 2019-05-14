@@ -1,6 +1,6 @@
 use super::{
-    address_peer_to_actor, info, riker::actors::*, xdr, AstroProtocol, FloodGateActor,
-    OverlayManager, Peer, PeerActor, CONFIG,
+    peer_actor_name, info, riker::actors::*, xdr, AstroProtocol, FloodGateActor,
+    OverlayManager, Peer, PeerActor, CONFIG, overlay_manager_ref, flood_gate_ref
 };
 use std::net::TcpListener;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -50,11 +50,11 @@ impl OverlayManagerActor {
 
     /// Check minimal connections
     pub fn check_min_connections(&mut self, ctx: &Context<AstroProtocol>) {
-        if self.state.reached_limit_of_authenticated_peers() {
+        if self.state.reached_min_of_authenticated_peers() {
             return;
         }
 
-        let limit = self.state.peers_to_authenticated_limit() as usize;
+        let limit = self.state.peers_to_authenticated_min_limit() as usize;
         let taked_peers: Vec<_> = self
             .state
             .known_peer_adresses()
@@ -72,15 +72,18 @@ impl OverlayManagerActor {
     }
 
     pub fn handle_new_incoming_peer(&mut self, ctx: &Context<AstroProtocol>, peer: Peer) {
-        if !self.state.reached_limit_of_authenticated_peers() {
-            let name = format!("peer-{}", address_peer_to_actor(peer.peer_addr()));
+        if self.state.reached_max_of_authenticated_peers() {
+            info!("[Overlay][Listener] new incoming peer {} dropped, cause: limit of peers", peer.peer_addr());
+        } else {
+            info!("[Overlay][Listener] new incoming peer {}", peer.peer_addr());
+            let name = peer_actor_name(&peer.peer_addr());
             ctx.system
                 .actor_of(PeerActor::incoming_peer_props(peer), &name);
         }
     }
 
     pub fn handle_new_initiated_peer(&mut self, ctx: &Context<AstroProtocol>, address: String) {
-        let name = format!("peer-{}", address_peer_to_actor(address.clone()));
+        let name = peer_actor_name(&address);
         ctx.system
             .actor_of(PeerActor::initiated_peer_props(address), &name);
     }
@@ -96,7 +99,7 @@ impl OverlayManagerActor {
                 self.state.add_known_peers(set_of_peers);
             }
             xdr::StellarMessage::Transaction(_) | xdr::StellarMessage::Envelope(_) => {
-                let flood_gate = ctx.select("/user/flood_gate").unwrap();
+                let flood_gate = flood_gate_ref(ctx);
                 flood_gate.tell(
                     AstroProtocol::AddRecordFloodGateCmd(message.to_owned(), address, unix_time()),
                     None,
@@ -194,12 +197,10 @@ impl Actor for OverlayListenerActor {
             match stream {
                 Ok(stream) => {
                     let peer = Box::new(Peer::new(stream, CONFIG.local_node().address()));
-                    ctx.myself()
-                        .parent()
-                        .tell(AstroProtocol::HandleOverlayIncomingPeerCmd(peer), None)
+                    overlay_manager_ref(ctx).tell(AstroProtocol::HandleOverlayIncomingPeerCmd(peer), None)
                 }
                 Err(e) => {
-                    info!("[Overlay][Listener] CONNECTION FAILED, cause: {:?}", e);
+                    info!("[Overlay][Listener] connection failed, cause: {:?}", e);
                 }
             }
         }
