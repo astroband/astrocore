@@ -1,6 +1,6 @@
 use super::{
     crypto, error, info, serde_xdr, sha2::Digest, trace, xdr, BigEndian, LocalNode, Rng,
-    WriteBytesExt, LOCAL_NODE,
+    WriteBytesExt, LOCAL_NODE, CONFIG,
 };
 use std::io::{Cursor, Read, Write};
 use std::net::TcpStream;
@@ -91,7 +91,7 @@ impl Peer {
             overlay_min_version: 0 as xdr::Uint32,
             network_id: LOCAL_NODE.network_id().to_owned(),
             version_str: String::from("stellar-core-rust[alpha-0.0]"),
-            listening_port: 11625,
+            listening_port: *CONFIG.local_node().port() as i32,
             peer_id,
             cert: auth_cert.clone(),
             nonce: xdr::Uint256(nonce),
