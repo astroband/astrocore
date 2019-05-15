@@ -151,9 +151,13 @@ impl OverlayManager {
         self.add_failed_peer(peers_address);
     }
 
-    /// Limit number of connections we can have between peers
-    pub(crate) fn limit_authenticated_peers(&self) -> usize {
-        *CONFIG.peers_limit() as usize
+    /// Max limit number of connections we can have between peers
+    pub(crate) fn max_limit_of_authenticated_peers(&self) -> usize {
+        *CONFIG.max_peers() as usize
+    }
+
+    pub(crate) fn min_limit_of_authenticated_peers(&self) -> usize {
+        *CONFIG.min_peers() as usize
     }
 
     pub(crate) fn populate_known_peers_from_db(&mut self) {
@@ -163,12 +167,16 @@ impl OverlayManager {
         }
     }
 
-    pub(crate) fn reached_limit_of_authenticated_peers(&self) -> bool {
-        self.authenticated_peers.len() >= self.limit_authenticated_peers()
+    pub(crate) fn reached_max_of_authenticated_peers(&self) -> bool {
+        self.authenticated_peers.len() >= self.max_limit_of_authenticated_peers()
     }
 
-    pub(crate) fn peers_to_authenticated_limit(&self) -> i32 {
-        self.limit_authenticated_peers() as i32 - self.authenticated_peers.len() as i32
+    pub(crate) fn reached_min_of_authenticated_peers(&self) -> bool {
+        self.authenticated_peers.len() >= self.min_limit_of_authenticated_peers()
+    }
+
+    pub(crate) fn peers_to_authenticated_min_limit(&self) -> i32 {
+        self.min_limit_of_authenticated_peers() as i32 - self.authenticated_peers.len() as i32
     }
 
     pub(crate) fn known_peer_adresses(&self) -> &HashSet<String> {

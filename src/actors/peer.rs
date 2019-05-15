@@ -1,4 +1,4 @@
-use super::{debug, riker::actors::*, AstroProtocol, Peer, PeerInterface};
+use super::{info, debug, error, riker::actors::*, AstroProtocol, Peer, PeerInterface, overlay_manager_ref};
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -22,16 +22,16 @@ impl PeerActor {
         Props::new_args(Box::new(PeerActor::new), (None, Some(peer)))
     }
 
-    pub fn overlay_manager_ref(
-        &self,
-        ctx: &Context<AstroProtocol>,
-    ) -> ActorSelection<AstroProtocol> {
-        ctx.select("/user/overlay_manager").unwrap()
-    }
-
     pub fn repeateable_read(&self, ctx: &Context<AstroProtocol>) {
         let delay = Duration::from_millis(200);
         ctx.schedule_once(delay, ctx.myself(), None, AstroProtocol::ServePeerCmd);
+    }
+
+    pub fn tell_peer_failed(&self, address: String, ctx: &Context<AstroProtocol>) {
+        overlay_manager_ref(ctx).tell(
+            AstroProtocol::FailedPeerCmd(address),
+            Some(ctx.myself()),
+        );
     }
 }
 
@@ -48,9 +48,9 @@ impl Actor for PeerActor {
             AstroProtocol::ServePeerCmd => {
                 match self.peer.as_mut().unwrap().receive_message() {
                     Ok(msg) => {
-                        self.overlay_manager_ref(ctx).tell(
+                        overlay_manager_ref(ctx).tell(
                             AstroProtocol::ReceivedPeerMessageCmd(
-                                self.address.as_ref().unwrap().to_owned(),
+                                self.peer.as_ref().unwrap().address().to_owned(),
                                 msg.into(),
                             ),
                             Some(ctx.myself()),
@@ -59,8 +59,8 @@ impl Actor for PeerActor {
                     }
                     Err(e) => {
                         debug!("Cant read XDR message cause: {}", e);
-                        self.overlay_manager_ref(ctx).tell(
-                            AstroProtocol::FailedPeerCmd(self.address.as_ref().unwrap().to_owned()),
+                        overlay_manager_ref(ctx).tell(
+                            AstroProtocol::FailedPeerCmd(self.peer.as_ref().unwrap().address().to_owned()),
                             Some(ctx.myself()),
                         );
                     }
@@ -91,17 +91,15 @@ impl Actor for PeerActor {
 
         if let Some(ref peer) = self.peer {
             if peer.is_authenticated() {
-                self.overlay_manager_ref(ctx).tell(
-                    AstroProtocol::AuthPeerOkCmd(self.address.as_ref().unwrap().to_owned()),
+                overlay_manager_ref(ctx).tell(
+                    AstroProtocol::AuthPeerOkCmd(self.peer.as_ref().unwrap().address().to_owned()),
                     Some(ctx.myself()),
                 );
                 self.repeateable_read(ctx);
                 return;
             }
+            self.tell_peer_failed(self.peer.as_ref().unwrap().address().to_owned(), ctx);
         }
-        self.overlay_manager_ref(ctx).tell(
-            AstroProtocol::FailedPeerCmd(self.address.as_ref().unwrap().to_owned()),
-            Some(ctx.myself()),
-        );
+        self.tell_peer_failed(self.address.as_ref().unwrap().to_owned(), ctx);
     }
 }
