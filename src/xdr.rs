@@ -2058,7 +2058,7 @@ pub struct DontHave {
          uint32 getSCPLedgerSeq; // ledger seq requested ; if 0, requests the latest
      };
 */
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, DeserializeEnum, SerializeEnum)]
 pub enum StellarMessage {
     Error(Error),
     Void,
