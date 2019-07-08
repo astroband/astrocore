@@ -1081,7 +1081,7 @@ dependencies = [
 [[package]]
 name = "serde-enum"
 version = "0.1.0"
-source = "git+https://github.com/jvff/serde-enum#63cdb1d627bc690187423b065b27da1da33f0ab9"
+source = "git+https://github.com/jvff/serde-enum#8983a4294aea7633be44b686a4a5d26bd8bcd94b"
 dependencies = [
  "proc-macro2 0.4.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.11 (registry+https://github.com/rust-lang/crates.io-index)",

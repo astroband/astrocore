@@ -2061,7 +2061,6 @@ pub struct DontHave {
 #[derive(Clone, Debug, Eq, PartialEq, DeserializeEnum, SerializeEnum)]
 pub enum StellarMessage {
     Error(Error),
-    Void,
     #[serde_enum(variant_id = 13)]
     Hello(Hello),
     Auth(Auth),
@@ -2079,7 +2078,7 @@ pub enum StellarMessage {
 
 impl Default for StellarMessage {
     fn default() -> Self {
-        StellarMessage::Void
+        StellarMessage::GetPeers
     }
 }
 
