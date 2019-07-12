@@ -22,7 +22,9 @@ serde = { version = "1.0.27", features = ["derive"] }
 serde_repr = "0.1"
 serde_derive = "1.0.27"
 serde_bytes = "0.10.3"
-serde-xdr = { version = "0.5.0", git = "https://github.com/Arkweid/serde-xdr" }
+# serde-xdr = { version = "0.5.0", git = "https://github.com/Arkweid/serde-xdr" }
+serde-xdr = { git = "https://github.com/jvff/serde-xdr.git", branch = "ignore-enum-variant-names-feature", features = ["ignore-enum-variant-names"] }
+serde-enum = { version = "*", git = "https://github.com/jvff/serde-enum" }
 simulacrum = "0.3.0"
 itertools = "0.8"
 toml = "0.4"

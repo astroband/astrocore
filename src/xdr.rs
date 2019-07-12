@@ -19,6 +19,7 @@ extern crate serde_xdr;
 use serde_derive::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use serde_xdr::opaque_data;
+use serde_enum::{DeserializeEnum, SerializeEnum};
 
 /* ==== Namespace: stellar ==== */
 /*
@@ -2057,10 +2058,11 @@ pub struct DontHave {
          uint32 getSCPLedgerSeq; // ledger seq requested ; if 0, requests the latest
      };
 */
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, DeserializeEnum, SerializeEnum)]
 pub enum StellarMessage {
     Error(Error),
-    Void,
+    #[serde_enum(variant_id = 13)]
+    Hello(Hello),
     Auth(Auth),
     DontHave(DontHave),
     GetPeers,
@@ -2072,12 +2074,11 @@ pub enum StellarMessage {
     QSet(ScpQuorumSet),
     Envelope(ScpEnvelope),
     GetScpLedgerSeq(Uint32),
-    Hello(Hello),
 }
 
 impl Default for StellarMessage {
     fn default() -> Self {
-        StellarMessage::Void
+        StellarMessage::GetPeers
     }
 }
 
