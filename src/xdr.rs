@@ -2061,8 +2061,7 @@ pub struct DontHave {
 #[derive(Clone, Debug, Eq, PartialEq, DeserializeEnum, SerializeEnum)]
 pub enum StellarMessage {
     Error(Error),
-    #[serde_enum(variant_id = 13)]
-    Hello(Hello),
+    #[serde_enum(variant_id = 2)]
     Auth(Auth),
     DontHave(DontHave),
     GetPeers,
@@ -2074,6 +2073,7 @@ pub enum StellarMessage {
     QSet(ScpQuorumSet),
     Envelope(ScpEnvelope),
     GetScpLedgerSeq(Uint32),
+    Hello(Hello),
 }
 
 impl Default for StellarMessage {
