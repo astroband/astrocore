@@ -1,4 +1,0 @@
-CREATE TABLE peers (
-  id INTEGER PRIMARY KEY,
-  address VARCHAR (20) UNIQUE NOT NULL
-)

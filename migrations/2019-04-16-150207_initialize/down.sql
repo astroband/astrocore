@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS ledgerheaders;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS signers;
+DROP TABLE IF EXISTS offers;
+DROP TABLE IF EXISTS trustlines;
+DROP TABLE IF EXISTS accountdata;
+DROP TABLE IF EXISTS txhistory;
+DROP TABLE IF EXISTS txfeehistory;
+DROP TABLE IF EXISTS scphistory;
+DROP TABLE IF EXISTS scpquorums;
+DROP TABLE IF EXISTS quoruminfo;
+DROP TABLE IF EXISTS storestate;
+DROP TABLE IF EXISTS peers;
+DROP TABLE IF EXISTS upgradehistory;
