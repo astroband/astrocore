@@ -1,6 +1,9 @@
 # WORK IN PROGRESS
 This crate try to implement stellar node on rust. Still in very ealy stage.
 
+<a href="https://evilmartians.com/?utm_source=astrocore">
+<img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg" alt="Sponsored by Evil Martians" width="236" height="54"></a>
+
 ## Current stage
 - [x] Cryptography (mod crypto)
 - [x] LocalNode representation (mod scp)
