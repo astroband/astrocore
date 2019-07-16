@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS ledgerheaders;
 CREATE TABLE ledgerheaders (
   ledgerhash      CHARACTER(64) PRIMARY KEY,
   prevhash        CHARACTER(64) NOT NULL,
@@ -9,7 +8,6 @@ CREATE TABLE ledgerheaders (
 );
 CREATE INDEX ledgersbyseq ON ledgerheaders ( ledgerseq );
 
-DROP TABLE IF EXISTS accounts;
 CREATE TABLE accounts
 (
   accountid       VARCHAR(56)  PRIMARY KEY,
@@ -24,7 +22,6 @@ CREATE TABLE accounts
 );
 CREATE INDEX accountbalances ON accounts (balance) WHERE balance >= 1000000000;
 
-DROP TABLE IF EXISTS signers;
 CREATE TABLE signers
 (
   accountid       VARCHAR(56) NOT NULL,
