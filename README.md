@@ -2,7 +2,15 @@
 This crate try to implement stellar node on rust. Still in very ealy stage.
 
 ## Current stage
-We already complete handsnake process with remote peer. So you can monitor all messages from remote peer or explore the stellar network jumping between known addresses.
+- [x] Cryptography (mod crypto)
+- [x] LocalNode representation (mod scp)
+- [x] Handsnake process (peer.rs)
+- [x] XDR communication (xdr.rs)
+- [x] Working with Database (SQLite)
+- [x] Accepting new connections (Overlay Listener)
+- [x] Retranslate messages (Overlay FloodGate)
+- [x] Finding new nodes (Overlay Manager)
+- [ ] Represent current Ledger (work in progress)
 
 ## Requirements
 SQLite
