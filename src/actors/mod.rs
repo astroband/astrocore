@@ -4,6 +4,7 @@
 mod flood_gate;
 mod overlay_manager;
 mod peer;
+mod overlay_listener;
 
 pub(crate) use crate::{
     astro_protocol::AstroProtocol,
@@ -11,12 +12,13 @@ pub(crate) use crate::{
     overlay::{message_abbr, FloodGate, OverlayManager, Peer, PeerInterface},
     xdr,
 };
-pub(crate) use log::{debug, info, error};
+pub(crate) use log::{debug, info};
 pub(crate) use riker;
 
 pub(crate) use self::overlay_manager::OverlayManagerActor;
 use self::flood_gate::FloodGateActor;
 use self::peer::PeerActor;
+use self::overlay_listener::OverlayListenerActor;
 
 use riker::actors::*;
 use riker_default::DefaultModel;

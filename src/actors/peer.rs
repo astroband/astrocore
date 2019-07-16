@@ -1,4 +1,4 @@
-use super::{info, debug, error, riker::actors::*, AstroProtocol, Peer, PeerInterface, overlay_manager_ref};
+use super::{debug, riker::actors::*, AstroProtocol, Peer, PeerInterface, overlay_manager_ref};
 use std::time::Duration;
 
 #[derive(Debug)]
