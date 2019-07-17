@@ -1,6 +1,8 @@
 table! {
-    peers (id) {
-        id -> Integer,
-        address -> Text,
+    peers (ip, port) {
+        ip -> Text,
+        port -> Integer,
+        nextattempt -> Timestamp,
+        numfailures -> Integer,
     }
 }

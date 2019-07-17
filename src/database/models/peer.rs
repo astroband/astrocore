@@ -1,10 +1,13 @@
 use super::{db_conn, schema::peers, CONFIG};
 use diesel::prelude::*;
+use chrono::NaiveDateTime;
 
 #[derive(Queryable, Debug)]
 pub struct Peer {
-    pub id: i32,
-    pub address: String,
+    pub ip: String,
+    pub port: i32,
+    pub nextattempt: NaiveDateTime,
+    pub numfailures: i32,
 }
 
 type Result<T> = std::result::Result<T, diesel::result::Error>;
@@ -16,30 +19,39 @@ impl Peer {
         peers.load::<Peer>(&*db_conn())
     }
 
-    pub fn create(addr: &str) -> Result<usize> {
-        let new_peer = NewPeer { address: addr.to_owned() };
+    pub fn create(ip: &str, port: i32) -> Result<usize> {
+        let new_peer = NewPeer {
+            ip: ip.to_owned(),
+            port: port,
+            nextattempt: diesel::dsl::now,
+        };
+        diesel::insert_into(peers::table)
+            .values(&new_peer)
+            .execute(&*db_conn());
 
         diesel::insert_into(peers::table)
             .values(&new_peer)
             .execute(&*db_conn())
     }
 
-    pub fn get(addr: &str) -> Result<Vec<Peer>> {
+    pub fn get(g_ip: &str, g_port: i32) -> Result<Vec<Peer>> {
         use self::peers::dsl::*;
 
-        peers.filter(address.eq(addr)).load::<Peer>(&*db_conn())
+        peers.filter(ip.eq(g_ip)).filter(port.eq(g_port)).load::<Peer>(&*db_conn())
     }
 
-    pub fn delete(addr: &str) -> Result<usize> {
+    pub fn delete(g_ip: &str, g_port: i32) -> Result<usize> {
         use self::peers::dsl::*;
 
-        diesel::delete(peers.filter(address.eq(addr))).execute(&*db_conn())
+        diesel::delete(peers.filter(ip.eq(g_ip)).filter(port.eq(g_port))).execute(&*db_conn())
     }
 
     pub fn load_initial_peers() {
         for initial_peer in CONFIG.initial_peers() {
             let new_peer = NewPeer {
-                address: initial_peer.address(),
+                ip: initial_peer.ip().to_owned(),
+                port: *initial_peer.port() as i32,
+                nextattempt: diesel::dsl::now,
             };
             diesel::insert_into(peers::table)
                 .values(&new_peer)
@@ -47,13 +59,15 @@ impl Peer {
         }
     }
 
-    pub fn address(&self) -> &String {
-        &self.address
+    pub fn address(&self) -> String {
+        format!("{}:{}", &self.ip, &self.port)
     }
 }
 
 #[derive(Insertable)]
 #[table_name = "peers"]
 pub struct NewPeer {
-    pub address: String,
+    pub ip: String,
+    pub port: i32,
+    pub nextattempt: diesel::dsl::now,
 }
