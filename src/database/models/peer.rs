@@ -8,6 +8,7 @@ pub struct Peer {
     pub port: i32,
     pub nextattempt: NaiveDateTime,
     pub numfailures: i32,
+    pub r#type: i32,
 }
 
 type Result<T> = std::result::Result<T, diesel::result::Error>;
@@ -21,7 +22,7 @@ impl Peer {
 
     pub fn create(ip: &str, port: i32) -> Result<usize> {
         let new_peer = NewPeer {
-            ip: ip.to_owned(),
+            ip: ip,
             port: port,
             nextattempt: diesel::dsl::now,
         };
@@ -49,7 +50,7 @@ impl Peer {
     pub fn load_initial_peers() {
         for initial_peer in CONFIG.initial_peers() {
             let new_peer = NewPeer {
-                ip: initial_peer.ip().to_owned(),
+                ip: initial_peer.ip(),
                 port: *initial_peer.port() as i32,
                 nextattempt: diesel::dsl::now,
             };
@@ -66,8 +67,8 @@ impl Peer {
 
 #[derive(Insertable)]
 #[table_name = "peers"]
-pub struct NewPeer {
-    pub ip: String,
+pub struct NewPeer<'a> {
+    pub ip: &'a str,
     pub port: i32,
     pub nextattempt: diesel::dsl::now,
 }

@@ -102,7 +102,7 @@ CREATE TABLE publishqueue
 
 CREATE TABLE scphistory
   (
-     nodeid    CHARACTER(56) NOT NULL,
+     nodeid    CHARACTER(56) NOT NULL PRIMARY KEY,
      ledgerseq INT NOT NULL CHECK (ledgerseq >= 0),
      envelope  TEXT NOT NULL
   );
