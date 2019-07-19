@@ -28,10 +28,6 @@ impl Peer {
         };
         diesel::insert_into(peers::table)
             .values(&new_peer)
-            .execute(&*db_conn());
-
-        diesel::insert_into(peers::table)
-            .values(&new_peer)
             .execute(&*db_conn())
     }
 
