@@ -1,6 +1,6 @@
 use super::{db_conn, schema::peers, CONFIG};
-use diesel::prelude::*;
 use chrono::NaiveDateTime;
+use diesel::prelude::*;
 
 #[derive(Queryable, Debug)]
 pub struct Peer {
@@ -8,7 +8,6 @@ pub struct Peer {
     pub port: i32,
     pub nextattempt: NaiveDateTime,
     pub numfailures: i32,
-    pub r#type: i32,
 }
 
 type Result<T> = std::result::Result<T, diesel::result::Error>;
@@ -34,7 +33,10 @@ impl Peer {
     pub fn get(g_ip: &str, g_port: i32) -> Result<Vec<Peer>> {
         use self::peers::dsl::*;
 
-        peers.filter(ip.eq(g_ip)).filter(port.eq(g_port)).load::<Peer>(&*db_conn())
+        peers
+            .filter(ip.eq(g_ip))
+            .filter(port.eq(g_port))
+            .load::<Peer>(&*db_conn())
     }
 
     pub fn delete(g_ip: &str, g_port: i32) -> Result<usize> {
@@ -50,9 +52,11 @@ impl Peer {
                 port: *initial_peer.port() as i32,
                 nextattempt: diesel::dsl::now,
             };
-            diesel::insert_into(peers::table)
+            let wololo = diesel::insert_into(peers::table)
                 .values(&new_peer)
                 .execute(&*db_conn());
+
+            dbg!(wololo);
         }
     }
 

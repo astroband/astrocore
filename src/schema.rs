@@ -62,8 +62,6 @@ table! {
         port -> Integer,
         nextattempt -> Timestamp,
         numfailures -> Integer,
-        #[sql_name = "type"]
-        type_ -> Integer,
     }
 }
 

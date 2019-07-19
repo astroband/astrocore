@@ -1,10 +1,4 @@
-use super::{info,
-    overlay_manager_ref,
-    riker::actors::*,
-    AstroProtocol,
-    Peer,
-    CONFIG,
-};
+use super::{info, overlay_manager_ref, riker::actors::*, AstroProtocol, Peer, CONFIG};
 use std::net::TcpListener;
 
 pub(crate) struct OverlayListenerActor;
@@ -45,7 +39,8 @@ impl Actor for OverlayListenerActor {
             match stream {
                 Ok(stream) => {
                     let peer = Box::new(Peer::new(stream, CONFIG.local_node().address()));
-                    overlay_manager_ref(ctx).tell(AstroProtocol::HandleOverlayIncomingPeerCmd(peer), None)
+                    overlay_manager_ref(ctx)
+                        .tell(AstroProtocol::HandleOverlayIncomingPeerCmd(peer), None)
                 }
                 Err(e) => {
                     info!("[Overlay][Listener] connection failed, cause: {:?}", e);

@@ -1,6 +1,6 @@
 use super::{
-    crypto, error, info, serde_xdr, sha2::Digest, trace, xdr, BigEndian, LocalNode, Rng,
-    WriteBytesExt, LOCAL_NODE, CONFIG,
+    crypto, debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng,
+    WriteBytesExt, CONFIG, LOCAL_NODE,
 };
 use std::io::{Cursor, Read, Write};
 use std::net::TcpStream;
@@ -123,11 +123,11 @@ impl Peer {
 
         match TcpStream::connect_timeout(&address, Duration::new(5, 0)) {
             Ok(stream) => {
-                trace!("Established peer connection with: {}", address);
+                debug!("Established peer connection with: {}", address);
                 Ok(Peer::new(stream, peer_address))
             }
             Err(e) => {
-                trace!("Failed to connect: {}, cause {}", address, e);
+                debug!("Failed to connect: {}, cause {}", address, e);
                 Err(PeerError::ConnectionFail)
             }
         }
@@ -179,11 +179,11 @@ impl PeerInterface for Peer {
             self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
             // last auth message from remote peer
             if self.receive_message().is_err() {
-                    info!(
-                        "[Overlay][Peer] Not received last auth message {}. Authentication aborted",
-                        self.address
-                    );
-                    return;
+                info!(
+                    "[Overlay][Peer] Not received last auth message {}. Authentication aborted",
+                    self.address
+                );
+                return;
             }
         } else {
             match self.receive_message() {
@@ -202,11 +202,11 @@ impl PeerInterface for Peer {
 
             // last auth message from remote peer
             if self.receive_message().is_err() {
-                    info!(
-                        "[Overlay][Peer] Not received last auth message {}. Authentication aborted",
-                        self.address
-                    );
-                    return;
+                info!(
+                    "[Overlay][Peer] Not received last auth message {}. Authentication aborted",
+                    self.address
+                );
+                return;
             }
             self.send_message(xdr::StellarMessage::Auth(xdr::Auth { unused: 0 }));
         }
@@ -397,7 +397,7 @@ impl PeerInterface for Peer {
         message_length <<= 8;
         message_length |= header[3] as usize;
 
-        trace!(
+        debug!(
             "[Overlay] RECEIVE HEADER {:?} \nWITH LENGTH {:?}",
             header,
             message_length
@@ -412,10 +412,10 @@ impl PeerInterface for Peer {
         let message_length = self.receive_header();
 
         let mut message_content = vec![0u8; message_length];
-        trace!("[Overlay] Message len {:?}", message_content.len());
+        debug!("[Overlay] Message len {:?}", message_content.len());
 
         self.stream.read_exact(&mut message_content).unwrap();
-        trace!("[Overlay] Message content {:?}", message_content);
+        debug!("[Overlay] Message content {:?}", message_content);
 
         let mut cursor = Cursor::new(message_content);
 

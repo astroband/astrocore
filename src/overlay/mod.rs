@@ -12,7 +12,7 @@ pub(crate) use crate::{
 };
 pub(crate) use byteorder::{BigEndian, WriteBytesExt};
 pub(crate) use itertools;
-pub(crate) use log::{error, info, trace};
+pub(crate) use log::{debug, error, info};
 pub(crate) use rand::Rng;
 pub(crate) use serde_xdr;
 pub(crate) use sha2;

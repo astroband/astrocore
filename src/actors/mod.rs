@@ -2,9 +2,9 @@
 #![allow(clippy::new_ret_no_self)]
 
 mod flood_gate;
+mod overlay_listener;
 mod overlay_manager;
 mod peer;
-mod overlay_listener;
 
 pub(crate) use crate::{
     astro_protocol::AstroProtocol,
@@ -15,10 +15,10 @@ pub(crate) use crate::{
 pub(crate) use log::{debug, info};
 pub(crate) use riker;
 
-pub(crate) use self::overlay_manager::OverlayManagerActor;
 use self::flood_gate::FloodGateActor;
-use self::peer::PeerActor;
 use self::overlay_listener::OverlayListenerActor;
+pub(crate) use self::overlay_manager::OverlayManagerActor;
+use self::peer::PeerActor;
 
 use riker::actors::*;
 use riker_default::DefaultModel;
@@ -40,7 +40,8 @@ fn flood_gate_ref(ctx: &Context<AstroProtocol>) -> ActorSelection<AstroProtocol>
 }
 
 fn peer_ref(address: &str, ctx: &Context<AstroProtocol>) -> ActorSelection<AstroProtocol> {
-    ctx.select(&format!("/user/peer-{}", peer_actor_name(address))).unwrap()
+    ctx.select(&format!("/user/peer-{}", peer_actor_name(address)))
+        .unwrap()
 }
 
 fn peer_actor_name(address: &str) -> String {

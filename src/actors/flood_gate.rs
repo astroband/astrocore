@@ -1,7 +1,4 @@
-use super::{
-    peer_ref, debug, message_abbr, riker::actors::*, xdr, AstroProtocol,
-    FloodGate,
-};
+use super::{debug, message_abbr, peer_ref, riker::actors::*, xdr, AstroProtocol, FloodGate};
 use std::collections::HashSet;
 use std::time::{SystemTime, UNIX_EPOCH};
 

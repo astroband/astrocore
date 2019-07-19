@@ -1,4 +1,4 @@
-use super::{debug, riker::actors::*, AstroProtocol, Peer, PeerInterface, overlay_manager_ref};
+use super::{debug, overlay_manager_ref, riker::actors::*, AstroProtocol, Peer, PeerInterface};
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -28,10 +28,7 @@ impl PeerActor {
     }
 
     pub fn tell_peer_failed(&self, address: String, ctx: &Context<AstroProtocol>) {
-        overlay_manager_ref(ctx).tell(
-            AstroProtocol::FailedPeerCmd(address),
-            Some(ctx.myself()),
-        );
+        overlay_manager_ref(ctx).tell(AstroProtocol::FailedPeerCmd(address), Some(ctx.myself()));
     }
 }
 
@@ -60,7 +57,9 @@ impl Actor for PeerActor {
                     Err(e) => {
                         debug!("Cant read XDR message cause: {}", e);
                         overlay_manager_ref(ctx).tell(
-                            AstroProtocol::FailedPeerCmd(self.peer.as_ref().unwrap().address().to_owned()),
+                            AstroProtocol::FailedPeerCmd(
+                                self.peer.as_ref().unwrap().address().to_owned(),
+                            ),
                             Some(ctx.myself()),
                         );
                     }

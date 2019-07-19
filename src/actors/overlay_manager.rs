@@ -1,6 +1,6 @@
 use super::{
-    peer_actor_name, info, riker::actors::*, xdr, AstroProtocol, FloodGateActor,
-    OverlayManager, Peer, PeerActor, flood_gate_ref, OverlayListenerActor,
+    flood_gate_ref, info, peer_actor_name, riker::actors::*, xdr, AstroProtocol, FloodGateActor,
+    OverlayListenerActor, OverlayManager, Peer, PeerActor,
 };
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -72,7 +72,10 @@ impl OverlayManagerActor {
 
     pub fn handle_new_incoming_peer(&mut self, ctx: &Context<AstroProtocol>, peer: Peer) {
         if self.state.reached_max_of_authenticated_peers() {
-            info!("[Overlay][Listener] new incoming peer {} dropped, cause: limit of peers", peer.peer_addr());
+            info!(
+                "[Overlay][Listener] new incoming peer {} dropped, cause: limit of peers",
+                peer.peer_addr()
+            );
         } else {
             info!("[Overlay][Listener] new incoming peer {}", peer.peer_addr());
             let name = peer_actor_name(&peer.peer_addr());
