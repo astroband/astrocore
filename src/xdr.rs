@@ -471,6 +471,7 @@ pub struct ChangeTrustOp {
 */
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum AllowTrustOpAsset {
+    AssetNative,
     #[serde(with = "opaque_data::fixed_length")]
     AssetCode4([u8; 4]),
     #[serde(with = "opaque_data::fixed_length")]
@@ -479,7 +480,7 @@ pub enum AllowTrustOpAsset {
 
 impl Default for AllowTrustOpAsset {
     fn default() -> Self {
-        AllowTrustOpAsset::AssetCode4([0, 0, 0, 0])
+        AllowTrustOpAsset::AssetNative
     }
 }
 
