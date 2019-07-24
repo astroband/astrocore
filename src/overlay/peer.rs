@@ -397,12 +397,6 @@ impl PeerInterface for Peer {
         message_length <<= 8;
         message_length |= header[3] as usize;
 
-        debug!(
-            "[Overlay] RECEIVE HEADER {:?} \nWITH LENGTH {:?}",
-            header,
-            message_length
-        );
-
         message_length
     }
 
@@ -412,10 +406,8 @@ impl PeerInterface for Peer {
         let message_length = self.receive_header();
 
         let mut message_content = vec![0u8; message_length];
-        debug!("[Overlay] Message len {:?}", message_content.len());
 
         self.stream.read_exact(&mut message_content).unwrap();
-        debug!("[Overlay] Message content {:?}", message_content);
 
         let mut cursor = Cursor::new(message_content);
 
