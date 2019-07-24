@@ -80,7 +80,7 @@ impl Peer {
         let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
 
         let mut public_key: [u8; 32] = Default::default();
-        public_key.copy_from_slice(LOCAL_NODE.key_pair.public_key().buf());
+        public_key.copy_from_slice(&LOCAL_NODE.key_pair.public.to_bytes());
         let peer_id = xdr::PublicKey::Ed25519(xdr::Uint256(public_key));
 
         let auth_cert = Peer::new_auth_cert(&LOCAL_NODE, &auth_public_key);
@@ -326,7 +326,7 @@ impl PeerInterface for Peer {
                 key: auth_public_key.0,
             },
             expiration,
-            sig: xdr::Signature(sign.to_vec()),
+            sig: xdr::Signature(sign.to_bytes().to_vec()),
         }
     }
 

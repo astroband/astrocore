@@ -12,7 +12,7 @@ mod signature;
 mod strkey;
 
 pub use self::ecdh::{Curve25519Public, Curve25519Secret};
-pub use self::keypair::{KeyPair, PublicKey, SecretKey};
+pub use self::keypair::from_secret_seed;
 pub use self::sha::{HmacSha256Key, HmacSha256Mac};
 
 /// Compute sha256 hash of `m`.

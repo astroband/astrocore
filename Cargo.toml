@@ -31,6 +31,7 @@ chrono = "0.4.7"
 dotenv = "0.10"
 riker = "0.2.4"
 riker-default = "0.2.4"
+ed25519-dalek = "1.0.0-pre.1"
 
 [profile.dev]
 debug = true
