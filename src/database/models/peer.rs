@@ -52,11 +52,10 @@ impl Peer {
                 port: *initial_peer.port() as i32,
                 nextattempt: diesel::dsl::now,
             };
-            let wololo = diesel::insert_into(peers::table)
+
+            diesel::insert_into(peers::table)
                 .values(&new_peer)
                 .execute(&*db_conn());
-
-            dbg!(wololo);
         }
     }
 
