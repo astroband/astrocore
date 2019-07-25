@@ -5,7 +5,7 @@ authors = ["A.A.Abroskin <arkweid@evilmartians.com>"]
 edition = "2018"
 
 [dependencies]
-sha2 = "0.8.0" # suppose replace it with sodiumoxide
+sha2 = "0.8.0"
 rand = "0.6.5"
 log = "0.4"
 env_logger = "0.6.0"

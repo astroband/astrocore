@@ -1,5 +1,8 @@
 #![allow(dead_code, unused_must_use)]
 
+use sha2::Sha256;
+use sha2::digest::Digest;
+
 pub(crate) mod flood_gate;
 pub(crate) mod overlay_manager;
 pub(crate) mod peer;
@@ -23,5 +26,5 @@ pub(crate) use self::peer::{Peer, PeerInterface};
 
 pub(crate) fn message_abbr(message: &xdr::StellarMessage) -> String {
     let bytes = serde_xdr::to_bytes(message).unwrap();
-    String::from_utf8_lossy(crypto::hash(&bytes.as_slice()).as_slice()).to_string()
+    String::from_utf8_lossy(Sha256::digest(&bytes.as_slice()).as_slice()).to_string()
 }

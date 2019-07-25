@@ -1,7 +1,8 @@
 #![allow(dead_code)]
 
+use sha2::Sha256;
+use sha2::digest::Digest;
 use crate::config::CONFIG;
-use crate::crypto;
 
 /// A Stellar Network.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -42,7 +43,7 @@ impl Network {
 
     /// Return the network id, which is the hash of the network passphrase.
     pub fn network_id(&self) -> Vec<u8> {
-        crypto::hash(self.passphrase.as_bytes())
+        Sha256::digest(self.passphrase.as_bytes()).to_vec()
     }
 }
 
