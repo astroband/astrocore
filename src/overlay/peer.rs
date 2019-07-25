@@ -3,10 +3,11 @@ use super::{
     WriteBytesExt, CONFIG, LOCAL_NODE,
 };
 use std::io::{Cursor, Read, Write};
+use std::fmt;
 use std::net::TcpStream;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use x25519_dalek::{StaticSecret, PublicKey};
 
-#[derive(Debug)]
 pub struct Peer {
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
@@ -16,10 +17,9 @@ pub struct Peer {
     cached_auth_cert: xdr::AuthCert,
     // Authentication system keys. Our ECDH secret and public keys are randomized on startup
     // More info in: stellar-core/src/overlay/PeerAuth.h file
-    /// Private authentication system key
-    auth_secret_key: crypto::Curve25519Secret,
     /// Public authentication system key
-    auth_public_key: crypto::Curve25519Public,
+    auth_public_key: PublicKey,
+    auth_secret_key: StaticSecret,
     /// Shared key with peer
     auth_shared_key: crypto::HmacSha256Key,
     /// Received MAC key from peer
@@ -49,7 +49,7 @@ pub trait PeerInterface {
     ) -> ();
     fn new_auth_cert(
         node_info: &LocalNode,
-        auth_public_key: &crypto::Curve25519Public,
+        auth_public_key: &PublicKey,
     ) -> xdr::AuthCert;
     fn send_message(&mut self, message: xdr::StellarMessage);
     fn send_header(&mut self, message_length: u32);
@@ -76,8 +76,11 @@ impl Peer {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
 
-        let auth_secret_key = crypto::Curve25519Secret::random();
-        let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
+        let auth_secret_key = StaticSecret::new(&mut rng);
+        let auth_public_key = PublicKey::from(&auth_secret_key);
+
+        // let auth_secret_key = crypto::Curve25519Secret::random();
+        // let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
 
         let mut public_key: [u8; 32] = Default::default();
         public_key.copy_from_slice(&LOCAL_NODE.key_pair.public.to_bytes());
@@ -240,18 +243,18 @@ impl PeerInterface for Peer {
         let mut public_b: [u8; 32] = Default::default();
 
         if we_called_remote {
-            public_a.copy_from_slice(&self.auth_public_key.0[..]);
+            public_a.copy_from_slice(&self.auth_public_key.as_bytes()[..]);
             public_b.copy_from_slice(&remote_pub_key.key[..]);
         } else {
             public_a.copy_from_slice(&remote_pub_key.key[..]);
-            public_b.copy_from_slice(&self.auth_public_key.0[..]);
+            public_b.copy_from_slice(&self.auth_public_key.as_bytes()[..]);
         }
 
-        let scalarmult =
-            crypto::Curve25519Public::scalarmult(&self.auth_secret_key, &remote_pub_key.key);
+        let shared_secret =
+            &self.auth_secret_key.diffie_hellman(&PublicKey::from(remote_pub_key.key));
 
         let mut buffer: Vec<u8> = Default::default();
-        buffer.extend(&scalarmult[..]);
+        buffer.extend(shared_secret.as_bytes());
         buffer.extend(public_a.iter().cloned());
         buffer.extend(public_b.iter().cloned());
 
@@ -293,7 +296,7 @@ impl PeerInterface for Peer {
     /// Make expired certicate for all connection with peers
     fn new_auth_cert(
         node_info: &LocalNode,
-        auth_public_key: &crypto::Curve25519Public,
+        auth_public_key: &PublicKey,
     ) -> xdr::AuthCert {
         let unix_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -311,7 +314,7 @@ impl PeerInterface for Peer {
         serde_xdr::to_writer(
             &mut buffer,
             &xdr::Curve25519Public {
-                key: auth_public_key.0,
+                key: *auth_public_key.as_bytes(),
             },
         )
         .unwrap();
@@ -323,7 +326,7 @@ impl PeerInterface for Peer {
 
         xdr::AuthCert {
             pubkey: xdr::Curve25519Public {
-                key: auth_public_key.0,
+                key: *auth_public_key.as_bytes(),
             },
             expiration,
             sig: xdr::Signature(sign.to_bytes().to_vec()),
@@ -458,5 +461,11 @@ impl Clone for Peer {
             peer_info: self.peer_info.clone(),
             is_authenticated: self.is_authenticated,
         }
+    }
+}
+
+impl fmt::Debug for Peer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{address: {:?}, peer_info: {:?}, is_authenticated: {:?}}}", &self.address, &self.peer_info, &self.is_authenticated)
     }
 }

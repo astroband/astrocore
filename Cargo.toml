@@ -32,6 +32,7 @@ dotenv = "0.10"
 riker = "0.2.4"
 riker-default = "0.2.4"
 ed25519-dalek = "1.0.0-pre.1"
+x25519-dalek = "0.5.2"
 
 [profile.dev]
 debug = true

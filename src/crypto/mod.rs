@@ -4,14 +4,13 @@ use sodiumoxide;
 use sodiumoxide::crypto::hash::sha256;
 use sodiumoxide::randombytes;
 
-mod ecdh;
 mod error;
 mod keypair;
 mod sha;
 mod signature;
 mod strkey;
 
-pub use self::ecdh::{Curve25519Public, Curve25519Secret};
+// pub use self::ecdh::{Curve25519Public, Curve25519Secret};
 pub use self::keypair::from_secret_seed;
 pub use self::sha::{HmacSha256Key, HmacSha256Mac};
 

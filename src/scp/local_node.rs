@@ -25,7 +25,7 @@ impl LocalNode {
         let key_pair = crypto::from_secret_seed(&secret_seed).unwrap();
 
         let mut network_id: [u8; 32] = Default::default();
-        network_id.copy_from_slice(&stellar_network[..]);
+        network_id.copy_from_slice(stellar_network);
 
         LocalNode {
             secret_seed,
