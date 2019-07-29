@@ -1,5 +1,5 @@
 use super::{
-    crypto, debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng,
+    debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng,
     WriteBytesExt, CONFIG, LOCAL_NODE,
 };
 use std::io::{Cursor, Read, Write};
@@ -7,6 +7,9 @@ use std::fmt;
 use std::net::TcpStream;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use x25519_dalek::{StaticSecret, PublicKey};
+use hkdf::Hkdf;
+use sha2::Sha256;
+use hmac::{Hmac, Mac};
 
 pub struct Peer {
     /// Socket for write/read with connected peer
@@ -21,11 +24,11 @@ pub struct Peer {
     auth_public_key: PublicKey,
     auth_secret_key: StaticSecret,
     /// Shared key with peer
-    auth_shared_key: crypto::HmacSha256Key,
+    auth_shared_key: [u8; 32],
     /// Received MAC key from peer
-    received_mac_key: crypto::HmacSha256Key,
+    received_mac_key: [u8; 32],
     /// Sended MAC key to peer
-    sended_mac_key: crypto::HmacSha256Key,
+    sended_mac_key: [u8; 32],
     /// Auth nonce
     nonce: [u8; 32],
     /// Signed Hello message
@@ -106,9 +109,9 @@ impl Peer {
             cached_auth_cert: auth_cert,
             auth_secret_key,
             auth_public_key,
-            auth_shared_key: crypto::HmacSha256Key::zero(),
-            received_mac_key: crypto::HmacSha256Key::zero(),
-            sended_mac_key: crypto::HmacSha256Key::zero(),
+            auth_shared_key: Default::default(),
+            received_mac_key: Default::default(),
+            sended_mac_key: Default::default(),
             nonce,
             hello,
             address,
@@ -258,7 +261,9 @@ impl PeerInterface for Peer {
         buffer.extend(public_a.iter().cloned());
         buffer.extend(public_b.iter().cloned());
 
-        self.auth_shared_key = crypto::HmacSha256Key::hkdf_extract(&buffer[..]);
+        let hk = Hkdf::<Sha256>::extract(None, &buffer);
+
+        self.auth_shared_key = hk.prk.into();
 
         // Set up sendingMacKey
         // If weCalled then sending key is K_AB,
@@ -275,8 +280,10 @@ impl PeerInterface for Peer {
         buffer.extend(self.nonce.iter().cloned());
         buffer.extend(received_nonce.0.iter().cloned());
 
-        self.sended_mac_key =
-            crypto::HmacSha256Key::hkdf_expand(&self.auth_shared_key, &buffer[..]);
+        let mut okm = [0; 32];
+        hk.expand(&buffer[..], &mut okm).unwrap();
+
+        self.sended_mac_key = okm;
 
         // Set up receivingMacKey
         let mut buffer: Vec<u8> = Default::default();
@@ -289,8 +296,10 @@ impl PeerInterface for Peer {
         buffer.extend(received_nonce.0.iter().cloned());
         buffer.extend(self.nonce.iter().cloned());
 
-        self.received_mac_key =
-            crypto::HmacSha256Key::hkdf_expand(&self.auth_shared_key, &buffer[..]);
+        okm = [0; 32];
+        hk.expand(&buffer[..], &mut okm).unwrap();
+
+        self.received_mac_key = okm;
     }
 
     /// Make expired certicate for all connection with peers
@@ -339,7 +348,7 @@ impl PeerInterface for Peer {
             sequence: self.send_message_sequence,
             message,
             mac: xdr::HmacSha256Mac {
-                mac: crypto::HmacSha256Mac::zero().0,
+                mac: Default::default(),
             },
         };
 
@@ -349,11 +358,9 @@ impl PeerInterface for Peer {
                 let mut packed_auth_message_v0 = Vec::new();
                 serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.sequence).unwrap();
                 serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.message).unwrap();
-                let mac = crypto::HmacSha256Mac::authenticate(
-                    &packed_auth_message_v0[..],
-                    &self.sended_mac_key,
-                );
-                am0.mac = xdr::HmacSha256Mac { mac: mac.0 };
+                let mut mac = Hmac::<Sha256>::new_varkey(&self.sended_mac_key).unwrap();
+                mac.input(&packed_auth_message_v0[..]);
+                am0.mac = xdr::HmacSha256Mac { mac: mac.result().code().into() };
                 self.increment_message_sequence();
             }
         };

@@ -9,7 +9,7 @@ pub(crate) mod peer;
 
 pub(crate) use crate::{
     config::CONFIG,
-    crypto, database,
+    database,
     scp::local_node::{LocalNode, LOCAL_NODE},
     xdr,
 };

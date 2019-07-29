@@ -6,7 +6,10 @@ edition = "2018"
 
 [dependencies]
 sha2 = "0.8.0"
+hmac = "0.7.1"
+hkdf = "0.7.1"
 rand = "0.6.5"
+hex = "0.3"
 log = "0.4"
 env_logger = "0.6.0"
 
