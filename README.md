@@ -17,7 +17,6 @@ This crate try to implement stellar node on rust. Still in very ealy stage.
 
 ## Requirements
 SQLite
-libsodium-dev
 
 ## Quick start
 

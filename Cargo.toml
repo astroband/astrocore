@@ -13,7 +13,6 @@ hex = "0.3"
 log = "0.4"
 env_logger = "0.6.0"
 
-sodiumoxide = "0.2.0"
 byteorder = "1"
 base32 = "0.3.1"
 crc16 = "0.3.4"
