@@ -82,9 +82,6 @@ impl Peer {
         let auth_secret_key = StaticSecret::new(&mut rng);
         let auth_public_key = PublicKey::from(&auth_secret_key);
 
-        // let auth_secret_key = crypto::Curve25519Secret::random();
-        // let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
-
         let mut public_key: [u8; 32] = Default::default();
         public_key.copy_from_slice(&LOCAL_NODE.key_pair.public.to_bytes());
         let peer_id = xdr::PublicKey::Ed25519(xdr::Uint256(public_key));
