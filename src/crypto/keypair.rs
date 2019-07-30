@@ -1,5 +1,4 @@
 use super::error::{Error, Result};
-// use super::network::{Network};
 use super::strkey;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey};
 

@@ -20,11 +20,7 @@ impl Peer {
     }
 
     pub fn create(ip: &str, port: i32) -> Result<usize> {
-        let new_peer = NewPeer {
-            ip: ip,
-            port: port,
-            nextattempt: diesel::dsl::now,
-        };
+        let new_peer = NewPeer { ip, port, nextattempt: diesel::dsl::now };
         diesel::insert_into(peers::table)
             .values(&new_peer)
             .execute(&*db_conn())
@@ -47,8 +43,6 @@ impl Peer {
 
     pub fn load_initial_peers() {
         for initial_peer in CONFIG.initial_peers() {
-            dbg!(initial_peer);
-
             let new_peer = NewPeer {
                 ip: initial_peer.ip(),
                 port: *initial_peer.port() as i32,

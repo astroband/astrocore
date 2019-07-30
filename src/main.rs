@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate diesel;
+use std::{thread, time};
 
 mod actors;
 mod astro_protocol;
@@ -17,5 +18,7 @@ fn main() {
     env_logger::init();
     database::init();
     actors::start();
-    loop {}
+    loop {
+        thread::sleep(time::Duration::from_millis(5));
+    }
 }

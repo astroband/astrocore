@@ -13,7 +13,7 @@ use std::collections::HashMap;
  * relate, and all flood-management information for a given ledger number
  * is purged from the FloodGate when the ledger closes.
  */
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct FloodGate {
     /// set of received messages
     pub flood_map: HashMap<String, FloodRecord>,
@@ -65,7 +65,7 @@ impl FloodGate {
 
         if let Some(record) = self.flood_map.get_mut(&index) {
             record.m_peers_told.push(from_peer_addr);
-            return false;
+            false
         } else {
             self.flood_map.insert(
                 index,
@@ -75,8 +75,8 @@ impl FloodGate {
                     vec![from_peer_addr.clone()],
                 ),
             );
-            return true;
-        };
+            true
+        }
     }
 
     pub fn shutdown(&mut self) {
