@@ -1,9 +1,9 @@
 #![allow(unused_variables)]
 
-use crate::crypto;
 use crate::overlay::peer::PeerInterface;
 use crate::scp::local_node::LocalNode;
 use crate::xdr;
+use x25519_dalek::PublicKey;
 
 pub struct PeerMock {
     pub address: String,
@@ -25,7 +25,7 @@ impl PeerInterface for PeerMock {
 
     fn new_auth_cert(
         node_info: &LocalNode,
-        auth_public_key: &crypto::Curve25519Public,
+        auth_public_key: &PublicKey,
     ) -> xdr::AuthCert {
         xdr::AuthCert::default()
     }

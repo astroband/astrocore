@@ -1,12 +1,16 @@
 use super::{
-    crypto, debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng,
+    debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng,
     WriteBytesExt, CONFIG, LOCAL_NODE,
 };
 use std::io::{Cursor, Read, Write};
+use std::fmt;
 use std::net::TcpStream;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use x25519_dalek::{StaticSecret, PublicKey};
+use hkdf::Hkdf;
+use sha2::Sha256;
+use hmac::{Hmac, Mac};
 
-#[derive(Debug)]
 pub struct Peer {
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
@@ -16,16 +20,15 @@ pub struct Peer {
     cached_auth_cert: xdr::AuthCert,
     // Authentication system keys. Our ECDH secret and public keys are randomized on startup
     // More info in: stellar-core/src/overlay/PeerAuth.h file
-    /// Private authentication system key
-    auth_secret_key: crypto::Curve25519Secret,
     /// Public authentication system key
-    auth_public_key: crypto::Curve25519Public,
+    auth_public_key: PublicKey,
+    auth_secret_key: StaticSecret,
     /// Shared key with peer
-    auth_shared_key: crypto::HmacSha256Key,
+    auth_shared_key: [u8; 32],
     /// Received MAC key from peer
-    received_mac_key: crypto::HmacSha256Key,
+    received_mac_key: [u8; 32],
     /// Sended MAC key to peer
-    sended_mac_key: crypto::HmacSha256Key,
+    sended_mac_key: [u8; 32],
     /// Auth nonce
     nonce: [u8; 32],
     /// Signed Hello message
@@ -49,7 +52,7 @@ pub trait PeerInterface {
     ) -> ();
     fn new_auth_cert(
         node_info: &LocalNode,
-        auth_public_key: &crypto::Curve25519Public,
+        auth_public_key: &PublicKey,
     ) -> xdr::AuthCert;
     fn send_message(&mut self, message: xdr::StellarMessage);
     fn send_header(&mut self, message_length: u32);
@@ -76,11 +79,14 @@ impl Peer {
         let mut rng = rand::thread_rng();
         let nonce: [u8; 32] = rng.gen();
 
-        let auth_secret_key = crypto::Curve25519Secret::random();
-        let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
+        let auth_secret_key = StaticSecret::new(&mut rng);
+        let auth_public_key = PublicKey::from(&auth_secret_key);
+
+        // let auth_secret_key = crypto::Curve25519Secret::random();
+        // let auth_public_key = crypto::Curve25519Public::derive_from_secret(&auth_secret_key);
 
         let mut public_key: [u8; 32] = Default::default();
-        public_key.copy_from_slice(LOCAL_NODE.key_pair.public_key().buf());
+        public_key.copy_from_slice(&LOCAL_NODE.key_pair.public.to_bytes());
         let peer_id = xdr::PublicKey::Ed25519(xdr::Uint256(public_key));
 
         let auth_cert = Peer::new_auth_cert(&LOCAL_NODE, &auth_public_key);
@@ -103,9 +109,9 @@ impl Peer {
             cached_auth_cert: auth_cert,
             auth_secret_key,
             auth_public_key,
-            auth_shared_key: crypto::HmacSha256Key::zero(),
-            received_mac_key: crypto::HmacSha256Key::zero(),
-            sended_mac_key: crypto::HmacSha256Key::zero(),
+            auth_shared_key: Default::default(),
+            received_mac_key: Default::default(),
+            sended_mac_key: Default::default(),
             nonce,
             hello,
             address,
@@ -240,22 +246,24 @@ impl PeerInterface for Peer {
         let mut public_b: [u8; 32] = Default::default();
 
         if we_called_remote {
-            public_a.copy_from_slice(&self.auth_public_key.0[..]);
+            public_a.copy_from_slice(&self.auth_public_key.as_bytes()[..]);
             public_b.copy_from_slice(&remote_pub_key.key[..]);
         } else {
             public_a.copy_from_slice(&remote_pub_key.key[..]);
-            public_b.copy_from_slice(&self.auth_public_key.0[..]);
+            public_b.copy_from_slice(&self.auth_public_key.as_bytes()[..]);
         }
 
-        let scalarmult =
-            crypto::Curve25519Public::scalarmult(&self.auth_secret_key, &remote_pub_key.key);
+        let shared_secret =
+            &self.auth_secret_key.diffie_hellman(&PublicKey::from(remote_pub_key.key));
 
         let mut buffer: Vec<u8> = Default::default();
-        buffer.extend(&scalarmult[..]);
+        buffer.extend(shared_secret.as_bytes());
         buffer.extend(public_a.iter().cloned());
         buffer.extend(public_b.iter().cloned());
 
-        self.auth_shared_key = crypto::HmacSha256Key::hkdf_extract(&buffer[..]);
+        let hk = Hkdf::<Sha256>::extract(None, &buffer);
+
+        self.auth_shared_key = hk.prk.into();
 
         // Set up sendingMacKey
         // If weCalled then sending key is K_AB,
@@ -272,8 +280,10 @@ impl PeerInterface for Peer {
         buffer.extend(self.nonce.iter().cloned());
         buffer.extend(received_nonce.0.iter().cloned());
 
-        self.sended_mac_key =
-            crypto::HmacSha256Key::hkdf_expand(&self.auth_shared_key, &buffer[..]);
+        let mut okm = [0; 32];
+        hk.expand(&buffer[..], &mut okm).unwrap();
+
+        self.sended_mac_key = okm;
 
         // Set up receivingMacKey
         let mut buffer: Vec<u8> = Default::default();
@@ -286,14 +296,16 @@ impl PeerInterface for Peer {
         buffer.extend(received_nonce.0.iter().cloned());
         buffer.extend(self.nonce.iter().cloned());
 
-        self.received_mac_key =
-            crypto::HmacSha256Key::hkdf_expand(&self.auth_shared_key, &buffer[..]);
+        okm = [0; 32];
+        hk.expand(&buffer[..], &mut okm).unwrap();
+
+        self.received_mac_key = okm;
     }
 
     /// Make expired certicate for all connection with peers
     fn new_auth_cert(
         node_info: &LocalNode,
-        auth_public_key: &crypto::Curve25519Public,
+        auth_public_key: &PublicKey,
     ) -> xdr::AuthCert {
         let unix_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -311,7 +323,7 @@ impl PeerInterface for Peer {
         serde_xdr::to_writer(
             &mut buffer,
             &xdr::Curve25519Public {
-                key: auth_public_key.0,
+                key: *auth_public_key.as_bytes(),
             },
         )
         .unwrap();
@@ -323,10 +335,10 @@ impl PeerInterface for Peer {
 
         xdr::AuthCert {
             pubkey: xdr::Curve25519Public {
-                key: auth_public_key.0,
+                key: *auth_public_key.as_bytes(),
             },
             expiration,
-            sig: xdr::Signature(sign.to_vec()),
+            sig: xdr::Signature(sign.to_bytes().to_vec()),
         }
     }
 
@@ -336,7 +348,7 @@ impl PeerInterface for Peer {
             sequence: self.send_message_sequence,
             message,
             mac: xdr::HmacSha256Mac {
-                mac: crypto::HmacSha256Mac::zero().0,
+                mac: Default::default(),
             },
         };
 
@@ -346,11 +358,9 @@ impl PeerInterface for Peer {
                 let mut packed_auth_message_v0 = Vec::new();
                 serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.sequence).unwrap();
                 serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.message).unwrap();
-                let mac = crypto::HmacSha256Mac::authenticate(
-                    &packed_auth_message_v0[..],
-                    &self.sended_mac_key,
-                );
-                am0.mac = xdr::HmacSha256Mac { mac: mac.0 };
+                let mut mac = Hmac::<Sha256>::new_varkey(&self.sended_mac_key).unwrap();
+                mac.input(&packed_auth_message_v0[..]);
+                am0.mac = xdr::HmacSha256Mac { mac: mac.result().code().into() };
                 self.increment_message_sequence();
             }
         };
@@ -448,15 +458,21 @@ impl Clone for Peer {
             send_message_sequence: self.send_message_sequence,
             cached_auth_cert: self.cached_auth_cert.clone(),
             auth_secret_key: self.auth_secret_key.clone(),
-            auth_public_key: self.auth_public_key.clone(),
-            auth_shared_key: self.auth_shared_key.clone(),
-            received_mac_key: self.received_mac_key.clone(),
-            sended_mac_key: self.sended_mac_key.clone(),
+            auth_public_key: self.auth_public_key,
+            auth_shared_key: self.auth_shared_key,
+            received_mac_key: self.received_mac_key,
+            sended_mac_key: self.sended_mac_key,
             nonce: self.nonce,
             hello: self.hello.clone(),
             address: self.address.clone(),
             peer_info: self.peer_info.clone(),
             is_authenticated: self.is_authenticated,
         }
+    }
+}
+
+impl fmt::Debug for Peer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{address: {:?}, peer_info: {:?}, is_authenticated: {:?}}}", &self.address, &self.peer_info, &self.is_authenticated)
     }
 }

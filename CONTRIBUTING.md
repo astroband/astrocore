@@ -5,8 +5,6 @@ Thanks for taking the time to contribute! Feel free to make Pull Request with yo
 
 Rust >= 1.33.0
 
-sodiumoxide libs in your OS
-
 # Proccess
 
 1. Fork repo

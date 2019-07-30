@@ -47,6 +47,8 @@ impl Peer {
 
     pub fn load_initial_peers() {
         for initial_peer in CONFIG.initial_peers() {
+            dbg!(initial_peer);
+
             let new_peer = NewPeer {
                 ip: initial_peer.ip(),
                 port: *initial_peer.port() as i32,
