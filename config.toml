@@ -12,19 +12,15 @@ port = 8080
 
 # test
 [[initial_peers]]
-host = "54.161.82.181"
-port = 11625
-
-[[initial_peers]]
-host = "54.211.174.177"
-port = 11625
-
-[[initial_peers]]
-host = "54.160.175.7"
-port = 11625
-
-[[initial_peers]]
 host = "core-testnet1.stellar.org"
+port = 11625
+
+[[initial_peers]]
+host = "core-testnet2.stellar.org"
+port = 11625
+
+[[initial_peers]]
+host = "core-testnet3.stellar.org"
 port = 11625
 
 # public
