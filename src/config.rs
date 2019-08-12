@@ -93,20 +93,12 @@ impl LocalNode {
 
 #[derive(Debug, Deserialize)]
 pub struct InitialPeer {
-    ip: String,
+    host: String,
     port: u64,
 }
 
 impl InitialPeer {
-    pub fn ip(&self) -> &String {
-        &self.ip
-    }
-
-    pub fn port(&self) -> &u64 {
-        &self.port
-    }
-
     pub fn address(&self) -> String {
-        format!("{}:{}", &self.ip, &self.port)
+        format!("{}:{}", &self.host, &self.port)
     }
 }

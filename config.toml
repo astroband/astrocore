@@ -12,30 +12,30 @@ port = 8080
 
 # test
 [[initial_peers]]
-ip = "54.161.82.181"
+host = "core-testnet1.stellar.org"
 port = 11625
 
 [[initial_peers]]
-ip = "54.211.174.177"
+host = "core-testnet2.stellar.org"
 port = 11625
 
 [[initial_peers]]
-ip = "54.160.175.7"
+host = "core-testnet3.stellar.org"
 port = 11625
 
 # public
 # [[initial_peers]]
-# ip = "35.234.95.115"
+# host = "35.234.95.115"
 # port = 11625
 
 # [[initial_peers]]
-# ip = "35.247.129.227"
+# host = "35.247.129.227"
 # port = 11625
 
 # [[initial_peers]]
-# ip = "35.194.40.151"
+# host = "35.194.40.151"
 # port = 11625
 
 # [[initial_peers]]
-# ip = "54.204.238.171"
+# host = "54.204.238.171"
 # port = 11625

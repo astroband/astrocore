@@ -1,6 +1,8 @@
 use super::{db_conn, schema::peers, CONFIG};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use log::warn;
+use std::net::ToSocketAddrs;
 
 #[derive(Queryable, Debug)]
 pub struct Peer {
@@ -20,7 +22,11 @@ impl Peer {
     }
 
     pub fn create(ip: &str, port: i32) -> Result<usize> {
-        let new_peer = NewPeer { ip, port, nextattempt: diesel::dsl::now };
+        let new_peer = NewPeer {
+            ip,
+            port,
+            nextattempt: diesel::dsl::now,
+        };
         diesel::insert_into(peers::table)
             .values(&new_peer)
             .execute(&*db_conn())
@@ -43,15 +49,30 @@ impl Peer {
 
     pub fn load_initial_peers() {
         for initial_peer in CONFIG.initial_peers() {
-            let new_peer = NewPeer {
-                ip: initial_peer.ip(),
-                port: *initial_peer.port() as i32,
-                nextattempt: diesel::dsl::now,
-            };
+            // perform DNS lookup, if necessary
+            match initial_peer.address().to_socket_addrs() {
+                Ok(mut addrs) => {
+                    if let Some(addr) = addrs.next() {
+                        let new_peer = NewPeer {
+                            ip: &addr.ip().to_string(),
+                            port: addr.port() as i32,
+                            nextattempt: diesel::dsl::now,
+                        };
 
-            diesel::insert_into(peers::table)
-                .values(&new_peer)
-                .execute(&*db_conn());
+                        diesel::insert_into(peers::table)
+                            .values(&new_peer)
+                            .execute(&*db_conn());
+                    }
+                }
+                Err(e) => {
+                    warn!(
+                        "DNS lookup for the peer {} failed: {}",
+                        initial_peer.address(),
+                        e
+                    );
+                    continue;
+                }
+            }
         }
     }
 
