@@ -94,11 +94,16 @@ impl LocalNode {
 #[derive(Debug, Deserialize)]
 pub struct InitialPeer {
     host: String,
+    #[serde(default = "InitialPeer::default_port")]
     port: u64,
 }
 
 impl InitialPeer {
     pub fn address(&self) -> String {
         format!("{}:{}", &self.host, &self.port)
+    }
+
+    fn default_port() -> u64 {
+        11625
     }
 }
