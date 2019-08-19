@@ -1,6 +1,6 @@
 #![allow(unused_variables)]
 
-use crate::overlay::peer::PeerInterface;
+use crate::overlay::peer::{PeerInterface, MessageReceiveError};
 use crate::scp::local_node::LocalNode;
 use crate::xdr;
 use x25519_dalek::PublicKey;
@@ -36,7 +36,7 @@ impl PeerInterface for PeerMock {
 
     fn receive_message(
         &mut self,
-    ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> {
+    ) -> Result<xdr::AuthenticatedMessage, MessageReceiveError> {
         Ok(xdr::AuthenticatedMessage::default())
     }
 

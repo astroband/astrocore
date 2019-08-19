@@ -11,6 +11,42 @@ use hkdf::Hkdf;
 use sha2::Sha256;
 use hmac::{Hmac, Mac};
 
+#[derive(Debug)]
+pub enum MessageReceiveError {
+    TCP(std::io::Error),
+    Parse(serde_xdr::CompatDeserializationError),
+}
+
+impl fmt::Display for MessageReceiveError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::TCP(e) => e.fmt(f),
+            Self::Parse(e) => e.fmt(f),
+        }
+    }
+}
+
+impl std::error::Error for MessageReceiveError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::TCP(e) => Some(e),
+            Self::Parse(e) => Some(e),
+        }
+    }
+}
+
+impl From<serde_xdr::CompatDeserializationError> for MessageReceiveError {
+    fn from(err: serde_xdr::CompatDeserializationError) -> MessageReceiveError {
+        Self::Parse(err)
+    }
+}
+
+impl From<std::io::Error> for MessageReceiveError {
+    fn from(err: std::io::Error) -> MessageReceiveError {
+        Self::TCP(err)
+    }
+}
+
 pub struct Peer {
     /// Socket for write/read with connected peer
     stream: std::net::TcpStream,
@@ -58,7 +94,7 @@ pub trait PeerInterface {
     fn send_header(&mut self, message_length: u32);
     fn receive_message(
         &mut self,
-    ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError>;
+    ) -> Result<xdr::AuthenticatedMessage, MessageReceiveError>;
     fn receive_header(&mut self) -> usize;
     fn increment_message_sequence(&mut self);
     fn set_authenticated(&mut self);
@@ -409,19 +445,19 @@ impl PeerInterface for Peer {
 
     fn receive_message(
         &mut self,
-    ) -> Result<xdr::AuthenticatedMessage, serde_xdr::CompatDeserializationError> {
+    ) -> Result<xdr::AuthenticatedMessage, MessageReceiveError> {
         let message_length = self.receive_header();
 
         let mut message_content = vec![0u8; message_length];
 
-        self.stream.read_exact(&mut message_content).unwrap();
+        self.stream.read_exact(&mut message_content)?;
 
         let mut cursor = Cursor::new(message_content);
 
         let authenticated_message: Result<
             xdr::AuthenticatedMessage,
-            serde_xdr::CompatDeserializationError,
-        > = serde_xdr::from_reader(&mut cursor);
+            MessageReceiveError,
+        > = serde_xdr::from_reader(&mut cursor).map_err(|e| e.into());
 
         // TODO: compare with HmacSha256Mac setted in Peer in stage of auth
         // TODO: check sequence of messages
