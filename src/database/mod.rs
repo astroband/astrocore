@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 pub use self::models::peer::Peer;
+pub use self::models::account::Account;
 
 mod models;
 mod repository;

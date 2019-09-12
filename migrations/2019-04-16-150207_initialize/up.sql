@@ -1,6 +1,6 @@
 CREATE TABLE accounts
   (
-     accountid          VARCHAR(56) PRIMARY KEY,
+     accountid          VARCHAR(56) PRIMARY KEY NOT NULL,
      balance            BIGINT NOT NULL CHECK (balance >= 0),
      seqnum             BIGINT NOT NULL,
      numsubentries      INT NOT NULL CHECK (numsubentries >= 0),
@@ -9,8 +9,8 @@ CREATE TABLE accounts
      thresholds         TEXT NOT NULL,
      flags              INT NOT NULL,
      lastmodified       INT NOT NULL,
-     buyingliabilities  BIGINT CHECK (buyingliabilities >= 0),
-     sellingliabilities BIGINT CHECK (sellingliabilities >= 0),
+     buyingliabilities  BIGINT NOT NULL CHECK (buyingliabilities >= 0),
+     sellingliabilities BIGINT NOT NULL CHECK (sellingliabilities >= 0),
      signers            TEXT
   );
 
