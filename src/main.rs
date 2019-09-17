@@ -12,6 +12,7 @@ mod network;
 mod overlay;
 mod schema;
 mod scp;
+mod stellar_base;
 mod xdr;
 
 fn main() {

@@ -4,6 +4,8 @@
 use crate::xdr;
 
 mod create_account_operation;
+mod utils;
+
 use create_account_operation::create_account_operation;
 // pub(crate) use lazy_static::lazy_static;
 
@@ -17,4 +19,3 @@ pub fn do_apply(operation: xdr::Operation) {
         _ => {}
     }
 }
-

@@ -3,7 +3,11 @@ use diesel::prelude::*;
 
 // https://www.stellar.org/developers/guides/concepts/accounts.html
 
-#[derive(Queryable, Debug)]
+// TODO: We should take base reserve from ledger header
+pub const BASE_RESERVE: i64 = 5000000;
+
+#[derive(Identifiable, Queryable, Debug)]
+#[primary_key(accountid)]
 pub struct Account {
     /// The public key that was first used to create the account. You can replace the key used for signing the account’s transactions with a different public key, but the original account ID will always be used to identify the account.
     pub accountid: String,
@@ -50,18 +54,26 @@ impl Account {
             .execute(&*db_conn())
     }
 
-    pub fn get(g_accountid: &str) -> Result<Vec<Account>> {
+    pub fn get(g_accountid: &str) -> Result<Account> {
         use self::accounts::dsl::*;
 
         accounts
             .filter(accountid.eq(g_accountid))
-            .load::<Account>(&*db_conn())
+            .first::<Account>(&*db_conn())
     }
 
     pub fn delete(g_accountid: &str) -> Result<usize> {
         use self::accounts::dsl::*;
 
         diesel::delete(accounts.filter(accountid.eq(g_accountid))).execute(&*db_conn())
+    }
+
+    // TODO: this should take base reserve from particular
+    // ledger header into account
+    // TODO: consider ledger version lower than 8, formulae was
+    // different back then
+    pub fn spendable_balance(&self) -> i64 {
+        self.balance - ((2 + i64::from(self.numsubentries)) * BASE_RESERVE)
     }
 }
 

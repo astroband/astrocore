@@ -8,12 +8,6 @@ use std::str;
 /// The Errors that can occur.
 #[derive(Debug)]
 pub enum Error {
-    /// Error that can occur when parsing a key.
-    InvalidStrKey,
-    /// Invalid version byte in key.
-    InvalidStrKeyVersionByte,
-    /// Invalid checksum in key.
-    InvalidStrKeyChecksum,
     /// Invalid keypair seed.
     InvalidSeed,
     /// Invalid Asset code.

@@ -1,4 +1,4 @@
-use super::error::{Error, Result};
+use crate::xdr::{AccountId};
 use base32;
 use byteorder::{ByteOrder, LittleEndian};
 use crc16::{State, XMODEM};
@@ -9,6 +9,24 @@ const PRE_AUTH_TX_VERSION_BYTE: u8 = 19 << 3; // T
 const SHA256_HASH_VERSION_BYTE: u8 = 23 << 3; // X
 
 static ALPHABET: base32::Alphabet = base32::Alphabet::RFC4648 { padding: false };
+
+#[derive(Debug)]
+pub enum Error {
+    /// Error that can occur when parsing a key.
+    InvalidStrKey,
+    /// Invalid version byte in key.
+    InvalidStrKeyVersionByte,
+    /// Invalid checksum in key.
+    InvalidStrKeyChecksum
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
+
+pub fn encode_ed25519_public_key(key: AccountId) -> Result<String> {
+    match key {
+        AccountId::Ed25519(opaque) => encode_account_id(&opaque.0)
+    }
+}
 
 pub fn encode_account_id(data: &[u8]) -> Result<String> {
     encode_check(ACCOUNT_ID_VERSION_BYTE, data)
