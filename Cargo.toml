@@ -36,6 +36,10 @@ riker-default = "0.2.4"
 ed25519-dalek = "1.0.0-pre.1"
 x25519-dalek = "0.5.2"
 
+[dependencies.libsqlite3-sys]
+version = "*"
+features = ["bundled"]
+
 [profile.dev]
 debug = true
 opt-level = 0

@@ -8,13 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2019-07-15
           override: true
-      - uses: actions-rs/cargo@v1
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
         with:
           command: check
+          args: --verbose
 
   test:
     name: Test Suite
@@ -28,6 +31,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --verbose
 
   fmt:
     name: Rustfmt
