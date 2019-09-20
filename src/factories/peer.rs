@@ -1,6 +1,6 @@
 #![allow(unused_variables)]
 
-use crate::overlay::peer::{PeerInterface, MessageReceiveError};
+use crate::overlay::peer::{MessageReceiveError, PeerInterface};
 use crate::scp::local_node::LocalNode;
 use crate::xdr;
 use x25519_dalek::PublicKey;
@@ -23,10 +23,7 @@ impl PeerInterface for PeerMock {
     ) {
     }
 
-    fn new_auth_cert(
-        node_info: &LocalNode,
-        auth_public_key: &PublicKey,
-    ) -> xdr::AuthCert {
+    fn new_auth_cert(node_info: &LocalNode, auth_public_key: &PublicKey) -> xdr::AuthCert {
         xdr::AuthCert::default()
     }
 
@@ -34,9 +31,7 @@ impl PeerInterface for PeerMock {
 
     fn send_header(&mut self, message_length: u32) {}
 
-    fn receive_message(
-        &mut self,
-    ) -> Result<xdr::AuthenticatedMessage, MessageReceiveError> {
+    fn receive_message(&mut self) -> Result<xdr::AuthenticatedMessage, MessageReceiveError> {
         Ok(xdr::AuthenticatedMessage::default())
     }
 

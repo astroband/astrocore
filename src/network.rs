@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
-use sha2::Sha256;
-use sha2::digest::Digest;
 use crate::config::CONFIG;
+use sha2::digest::Digest;
+use sha2::Sha256;
 
 /// A Stellar Network.
 #[derive(Debug, Clone, PartialEq, Eq)]

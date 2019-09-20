@@ -1,15 +1,15 @@
 use super::{
-    debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng,
-    WriteBytesExt, CONFIG, LOCAL_NODE,
+    debug, error, info, serde_xdr, sha2::Digest, xdr, BigEndian, LocalNode, Rng, WriteBytesExt,
+    CONFIG, LOCAL_NODE,
 };
-use std::io::{Cursor, Read, Write};
+use hkdf::Hkdf;
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
 use std::fmt;
+use std::io::{Cursor, Read, Write};
 use std::net::TcpStream;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use x25519_dalek::{StaticSecret, PublicKey};
-use hkdf::Hkdf;
-use sha2::Sha256;
-use hmac::{Hmac, Mac};
+use x25519_dalek::{PublicKey, StaticSecret};
 
 #[derive(Debug)]
 pub enum MessageReceiveError {
@@ -86,15 +86,10 @@ pub trait PeerInterface {
         received_nonce: xdr::Uint256,
         we_called_remote: bool,
     ) -> ();
-    fn new_auth_cert(
-        node_info: &LocalNode,
-        auth_public_key: &PublicKey,
-    ) -> xdr::AuthCert;
+    fn new_auth_cert(node_info: &LocalNode, auth_public_key: &PublicKey) -> xdr::AuthCert;
     fn send_message(&mut self, message: xdr::StellarMessage);
     fn send_header(&mut self, message_length: u32);
-    fn receive_message(
-        &mut self,
-    ) -> Result<xdr::AuthenticatedMessage, MessageReceiveError>;
+    fn receive_message(&mut self) -> Result<xdr::AuthenticatedMessage, MessageReceiveError>;
     fn receive_header(&mut self) -> usize;
     fn increment_message_sequence(&mut self);
     fn set_authenticated(&mut self);
@@ -286,8 +281,9 @@ impl PeerInterface for Peer {
             public_b.copy_from_slice(&self.auth_public_key.as_bytes()[..]);
         }
 
-        let shared_secret =
-            &self.auth_secret_key.diffie_hellman(&PublicKey::from(remote_pub_key.key));
+        let shared_secret = &self
+            .auth_secret_key
+            .diffie_hellman(&PublicKey::from(remote_pub_key.key));
 
         let mut buffer: Vec<u8> = Default::default();
         buffer.extend(shared_secret.as_bytes());
@@ -336,10 +332,7 @@ impl PeerInterface for Peer {
     }
 
     /// Make expired certicate for all connection with peers
-    fn new_auth_cert(
-        node_info: &LocalNode,
-        auth_public_key: &PublicKey,
-    ) -> xdr::AuthCert {
+    fn new_auth_cert(node_info: &LocalNode, auth_public_key: &PublicKey) -> xdr::AuthCert {
         let unix_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -393,7 +386,9 @@ impl PeerInterface for Peer {
                 serde_xdr::to_writer(&mut packed_auth_message_v0, &am0.message).unwrap();
                 let mut mac = Hmac::<Sha256>::new_varkey(&self.sended_mac_key).unwrap();
                 mac.input(&packed_auth_message_v0[..]);
-                am0.mac = xdr::HmacSha256Mac { mac: mac.result().code().into() };
+                am0.mac = xdr::HmacSha256Mac {
+                    mac: mac.result().code().into(),
+                };
                 self.increment_message_sequence();
             }
         };
@@ -443,9 +438,7 @@ impl PeerInterface for Peer {
         message_length
     }
 
-    fn receive_message(
-        &mut self,
-    ) -> Result<xdr::AuthenticatedMessage, MessageReceiveError> {
+    fn receive_message(&mut self) -> Result<xdr::AuthenticatedMessage, MessageReceiveError> {
         let message_length = self.receive_header();
 
         let mut message_content = vec![0u8; message_length];
@@ -454,10 +447,8 @@ impl PeerInterface for Peer {
 
         let mut cursor = Cursor::new(message_content);
 
-        let authenticated_message: Result<
-            xdr::AuthenticatedMessage,
-            MessageReceiveError,
-        > = serde_xdr::from_reader(&mut cursor).map_err(|e| e.into());
+        let authenticated_message: Result<xdr::AuthenticatedMessage, MessageReceiveError> =
+            serde_xdr::from_reader(&mut cursor).map_err(|e| e.into());
 
         // TODO: compare with HmacSha256Mac setted in Peer in stage of auth
         // TODO: check sequence of messages
@@ -506,6 +497,10 @@ impl Clone for Peer {
 
 impl fmt::Debug for Peer {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{address: {:?}, peer_info: {:?}, is_authenticated: {:?}}}", &self.address, &self.peer_info, &self.is_authenticated)
+        write!(
+            f,
+            "{{address: {:?}, peer_info: {:?}, is_authenticated: {:?}}}",
+            &self.address, &self.peer_info, &self.is_authenticated
+        )
     }
 }
