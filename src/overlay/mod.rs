@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_must_use)]
 
-use sha2::Sha256;
 use sha2::digest::Digest;
+use sha2::Sha256;
 
 pub(crate) mod flood_gate;
 pub(crate) mod overlay_manager;

@@ -32,8 +32,6 @@ pub enum AstroProtocol {
     ClearFloodGateCmd(u32),
 }
 
-
-
 impl Into<ActorMsg<AstroProtocol>> for AstroProtocol {
     fn into(self) -> ActorMsg<AstroProtocol> {
         ActorMsg::User(self)
