@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
-mod error;
 mod keypair;
-mod strkey;
+mod error;
 
 pub use self::keypair::from_secret_seed;

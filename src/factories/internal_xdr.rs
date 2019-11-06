@@ -1,4 +1,6 @@
 use crate::xdr;
+use rand::rngs::OsRng;
+use ed25519_dalek::Keypair;
 use serde::ser::Serialize;
 use serde_xdr::to_bytes;
 
@@ -55,6 +57,13 @@ pub fn build_public_key() -> xdr::PublicKey {
         114, 102, 121, 110, 104, 105, 115, 100, 99, 122, 112, 112, 119, 105, 108, 121, 122, 108,
         102, 101, 107, 111, 102, 103, 109, 103, 106, 105, 98, 118, 110, 113,
     ]))
+}
+
+pub fn random_public_key() -> xdr::PublicKey {
+    let mut rng = OsRng::new().unwrap();
+    let random_keypair = Keypair::generate(&mut rng);
+
+    xdr::PublicKey::Ed25519(xdr::Uint256(*random_keypair.public.as_bytes()))
 }
 
 pub fn build_operation_result_code() -> xdr::OperationResultCode {

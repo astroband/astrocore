@@ -9,7 +9,7 @@ table! {
 
 table! {
     accounts (accountid) {
-        accountid -> Nullable<Text>,
+        accountid -> Text,
         balance -> BigInt,
         seqnum -> BigInt,
         numsubentries -> Integer,
@@ -18,8 +18,8 @@ table! {
         thresholds -> Text,
         flags -> Integer,
         lastmodified -> Integer,
-        buyingliabilities -> Nullable<BigInt>,
-        sellingliabilities -> Nullable<BigInt>,
+        buyingliabilities -> BigInt,
+        sellingliabilities -> BigInt,
         signers -> Nullable<Text>,
     }
 }
